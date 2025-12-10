@@ -5,9 +5,33 @@ Here's a macos/ios .NET 10 Maui app which works as a roku remote so you can use 
 If the dev materials are free, why should the experience to actually use them cost money... That's what leads to stupid 
 products like [ai powered toothbrush health monitoring](https://feno.co/) (please do NOT purchase things like that. waste of money)
 
-Anyway if you figure out how to get an installable build of this or if I decide to publish a build, here's a free roku remote app.
+## Installation (macOS)
 
-## Prerequisites
+1. Download `RoMoteNoAds-macOS.dmg` from the [Releases](../../releases) page
+2. Open the DMG and drag RoMoteNoAds to Applications
+
+### First Launch (Required)
+
+Since this app is not signed with an Apple Developer certificate, macOS will block it:
+
+**Option 1 - Right-Click Open (Easiest):**
+1. Right-click RoMoteNoAds in Applications
+2. Select "Open"
+3. Click "Open" in the dialog
+
+**Option 2 - System Settings:**
+1. Try to open the app (it will be blocked)
+2. Go to System Settings → Privacy & Security
+3. Click "Open Anyway" next to the blocked message
+
+**Option 3 - Terminal:**
+```bash
+xattr -d com.apple.quarantine /Applications/RoMoteNoAds.app
+```
+
+## Building from Source
+
+### Prerequisites
 
 - [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
 - macOS with Xcode installed (for iOS/Mac Catalyst builds):

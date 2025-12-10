@@ -1,0 +1,61 @@
+name: Build macOS App
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build-macos:
+    runs-on: macos-15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Install MAUI Workload
+        run: dotnet workload install maui
+
+      - name: Restore Dependencies
+        run: dotnet restore src/RoMoteNoAds/RoMoteNoAds.csproj
+
+      - name: Publish Mac Catalyst App
+        run: |
+          dotnet publish src/RoMoteNoAds/RoMoteNoAds.csproj \
+            -f net10.0-maccatalyst \
+            -c Release \
+            -p:CreatePackage=false \
+            -p:MtouchLink=SdkOnly
+
+      - name: Ad-hoc Sign (for arm64 dylib compatibility)
+        run: |
+          codesign --force --deep --sign - \
+            "src/RoMoteNoAds/bin/Release/net10.0-maccatalyst/maccatalyst-arm64/RoMoteNoAds.app"
+
+      - name: Create DMG
+        run: |
+          hdiutil create \
+            -format UDZO \
+            -srcfolder "src/RoMoteNoAds/bin/Release/net10.0-maccatalyst/maccatalyst-arm64/RoMoteNoAds.app" \
+            -volname "RoMoteNoAds" \
+            RoMoteNoAds-macOS.dmg
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: RoMoteNoAds-macOS
+          path: RoMoteNoAds-macOS.dmg
+
+      - name: Upload to Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: RoMoteNoAds-macOS.dmg
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
