@@ -1,0 +1,6 @@
+Any raw assets you want to be deployed with your application can be placed in
+this directory (and child directories). Deployment of the asset to your application
+is automatic. You can reference the raw asset in your application by path.
+
+For example, you can access the asset in this directory with:
+    var file = await FileSystem.OpenAppPackageFileAsync("AboutAssets.txt");

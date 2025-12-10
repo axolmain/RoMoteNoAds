@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Shell xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+       xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+       xmlns:views="clr-namespace:RoMoteNoAds.Views"
+       x:Class="RoMoteNoAds.AppShell"
+       Shell.FlyoutBehavior="Disabled">
+
+    <TabBar>
+        <ShellContent
+            Title="Remote"
+            Icon="{OnPlatform iOS='remote_icon.png', MacCatalyst='remote_icon.png'}"
+            ContentTemplate="{DataTemplate views:RemotePage}" />
+
+        <ShellContent
+            Title="Channels"
+            Icon="{OnPlatform iOS='channels_icon.png', MacCatalyst='channels_icon.png'}"
+            ContentTemplate="{DataTemplate views:ChannelsPage}" />
+
+        <ShellContent
+            Title="Devices"
+            Icon="{OnPlatform iOS='devices_icon.png', MacCatalyst='devices_icon.png'}"
+            ContentTemplate="{DataTemplate views:DeviceSelectionPage}" />
+    </TabBar>
+
+</Shell>

@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:RoMoteNoAds.ViewModels"
+             xmlns:models="clr-namespace:RoMoteNoAds.Models"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+             x:Class="RoMoteNoAds.Views.ChannelsPage"
+             x:DataType="vm:ChannelsViewModel"
+             Title="Channels">
+
+    <RefreshView IsRefreshing="{Binding IsRefreshing}"
+                 Command="{Binding RefreshChannelsCommand}">
+        <Grid RowDefinitions="Auto,*" Padding="16">
+
+            <!-- Header -->
+            <VerticalStackLayout Grid.Row="0" Spacing="8">
+                <!-- Active Channel Info -->
+                <Frame Style="{StaticResource CardFrame}"
+                       Padding="12"
+                       IsVisible="{Binding ActiveChannel, Converter={toolkit:IsNotNullConverter}}">
+                    <HorizontalStackLayout Spacing="12">
+                        <Image Source="{Binding ActiveChannel.IconSource}"
+                               HeightRequest="40"
+                               WidthRequest="40"
+                               Aspect="AspectFit" />
+                        <VerticalStackLayout VerticalOptions="Center">
+                            <Label Text="Now Playing"
+                                   Style="{StaticResource SubtitleLabel}"
+                                   FontSize="11" />
+                            <Label Text="{Binding ActiveChannel.Name}"
+                                   Style="{StaticResource BodyLabel}"
+                                   FontAttributes="Bold" />
+                        </VerticalStackLayout>
+                    </HorizontalStackLayout>
+                </Frame>
+
+                <!-- Error Message -->
+                <Border BackgroundColor="{StaticResource Error}"
+                       Padding="12,8"
+                       IsVisible="{Binding ErrorMessage, Converter={toolkit:IsStringNotNullOrEmptyConverter}}">
+                    <Label Text="{Binding ErrorMessage}"
+                           TextColor="White"
+                           FontSize="12"
+                           HorizontalOptions="Center" />
+                </Border>
+            </VerticalStackLayout>
+
+            <!-- Channel Grid -->
+            <CollectionView Grid.Row="1"
+                           ItemsSource="{Binding Channels}"
+                           Margin="0,16,0,0">
+                <CollectionView.ItemsLayout>
+                    <GridItemsLayout Orientation="Vertical"
+                                    Span="3"
+                                    HorizontalItemSpacing="12"
+                                    VerticalItemSpacing="12" />
+                </CollectionView.ItemsLayout>
+
+                <CollectionView.EmptyView>
+                    <VerticalStackLayout VerticalOptions="Center"
+                                        HorizontalOptions="Center"
+                                        Spacing="16">
+                        <Label Text="No Channels"
+                               Style="{StaticResource TitleLabel}"
+                               HorizontalOptions="Center" />
+                        <Label Text="Connect to a Roku device to see installed channels"
+                               Style="{StaticResource SubtitleLabel}"
+                               HorizontalOptions="Center"
+                               HorizontalTextAlignment="Center" />
+                        <Button Text="Refresh"
+                                Command="{Binding RefreshChannelsCommand}"
+                                Style="{StaticResource PrimaryButton}" />
+                    </VerticalStackLayout>
+                </CollectionView.EmptyView>
+
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:RokuChannel">
+                        <Frame Style="{StaticResource CardFrame}"
+                               Padding="8"
+                               BorderColor="{Binding IsActive, Converter={StaticResource BoolToColorConverter}}">
+                            <Frame.GestureRecognizers>
+                                <TapGestureRecognizer
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ChannelsViewModel}}, Path=LaunchChannelCommand}"
+                                    CommandParameter="{Binding .}" />
+                            </Frame.GestureRecognizers>
+
+                            <VerticalStackLayout Spacing="8"
+                                                HorizontalOptions="Center">
+                                <!-- Channel Icon -->
+                                <Border StrokeThickness="0"
+                                        HeightRequest="60"
+                                        WidthRequest="60">
+                                    <Border.StrokeShape>
+                                        <RoundRectangle CornerRadius="8" />
+                                    </Border.StrokeShape>
+                                    <Image Source="{Binding IconSource}"
+                                           Aspect="AspectFit"
+                                           HeightRequest="60"
+                                           WidthRequest="60" />
+                                </Border>
+
+                                <!-- Channel Name -->
+                                <Label Text="{Binding Name}"
+                                       Style="{StaticResource BodyLabel}"
+                                       FontSize="12"
+                                       LineBreakMode="TailTruncation"
+                                       MaxLines="2"
+                                       HorizontalOptions="Center"
+                                       HorizontalTextAlignment="Center" />
+
+                                <!-- Active Indicator -->
+                                <Label Text="● Now Playing"
+                                       TextColor="{StaticResource Success}"
+                                       FontSize="10"
+                                       IsVisible="{Binding IsActive}"
+                                       HorizontalOptions="Center" />
+                            </VerticalStackLayout>
+                        </Frame>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <!-- Loading Overlay -->
+            <Grid Grid.RowSpan="2"
+                  IsVisible="{Binding IsBusy}"
+                  BackgroundColor="{AppThemeBinding Light=#80FFFFFF, Dark=#80000000}">
+                <ActivityIndicator IsRunning="{Binding IsBusy}"
+                                  HeightRequest="50"
+                                  WidthRequest="50"
+                                  VerticalOptions="Center"
+                                  HorizontalOptions="Center" />
+            </Grid>
+        </Grid>
+    </RefreshView>
+</ContentPage>
