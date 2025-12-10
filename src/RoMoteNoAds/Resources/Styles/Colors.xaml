@@ -40,4 +40,10 @@
     <Color x:Key="TextPrimaryDark">#FFFFFF</Color>
     <Color x:Key="TextSecondaryDark">#B0B0B0</Color>
 
+    <!-- Glass/Frost Effects -->
+    <Color x:Key="FrostLight">#E8FFFFFF</Color>
+    <Color x:Key="FrostDark">#E82D2D2D</Color>
+    <Color x:Key="FrostBorderLight">#40000000</Color>
+    <Color x:Key="FrostBorderDark">#40FFFFFF</Color>
+
 </ResourceDictionary>
