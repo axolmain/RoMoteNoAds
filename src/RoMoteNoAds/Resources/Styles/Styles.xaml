@@ -99,4 +99,99 @@
         <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource CardBackgroundLight}, Dark={StaticResource CardBackgroundDark}}" />
     </Style>
 
+    <!-- Glass Remote Card -->
+    <Style x:Key="GlassCard" TargetType="Frame">
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource FrostLight}, Dark={StaticResource FrostDark}}" />
+        <Setter Property="CornerRadius" Value="24" />
+        <Setter Property="Padding" Value="20" />
+        <Setter Property="HasShadow" Value="True" />
+        <Setter Property="BorderColor" Value="{AppThemeBinding Light={StaticResource FrostBorderLight}, Dark={StaticResource FrostBorderDark}}" />
+    </Style>
+
+    <!-- Glass Button Base -->
+    <Style x:Key="GlassButton" TargetType="Button">
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light=#20000000, Dark=#20FFFFFF}" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextPrimaryLight}, Dark={StaticResource TextPrimaryDark}}" />
+        <Setter Property="FontSize" Value="20" />
+        <Setter Property="CornerRadius" Value="12" />
+        <Setter Property="HeightRequest" Value="56" />
+        <Setter Property="WidthRequest" Value="56" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="BorderColor" Value="Transparent" />
+    </Style>
+
+    <!-- Power Button -->
+    <Style x:Key="PowerButton" TargetType="Button" BasedOn="{StaticResource GlassButton}">
+        <Setter Property="BackgroundColor" Value="#40E74C3C" />
+        <Setter Property="TextColor" Value="{StaticResource Error}" />
+        <Setter Property="HeightRequest" Value="44" />
+        <Setter Property="WidthRequest" Value="44" />
+        <Setter Property="CornerRadius" Value="22" />
+    </Style>
+
+    <!-- Volume Pill Container (apply to Frame) -->
+    <Style x:Key="VolumePillFrame" TargetType="Frame">
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light=#20000000, Dark=#20FFFFFF}" />
+        <Setter Property="CornerRadius" Value="25" />
+        <Setter Property="Padding" Value="8,12" />
+        <Setter Property="HasShadow" Value="False" />
+        <Setter Property="BorderColor" Value="Transparent" />
+        <Setter Property="WidthRequest" Value="50" />
+    </Style>
+
+    <!-- Volume Button (inside pill) -->
+    <Style x:Key="GlassVolumeButton" TargetType="Button">
+        <Setter Property="BackgroundColor" Value="Transparent" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextPrimaryLight}, Dark={StaticResource TextPrimaryDark}}" />
+        <Setter Property="FontSize" Value="18" />
+        <Setter Property="HeightRequest" Value="44" />
+        <Setter Property="WidthRequest" Value="44" />
+        <Setter Property="CornerRadius" Value="22" />
+        <Setter Property="Padding" Value="0" />
+    </Style>
+
+    <!-- Playback Button -->
+    <Style x:Key="GlassPlaybackButton" TargetType="Button" BasedOn="{StaticResource GlassButton}">
+        <Setter Property="HeightRequest" Value="48" />
+        <Setter Property="WidthRequest" Value="48" />
+        <Setter Property="CornerRadius" Value="24" />
+        <Setter Property="FontSize" Value="22" />
+    </Style>
+
+    <!-- Action Row Button -->
+    <Style x:Key="GlassActionButton" TargetType="Button" BasedOn="{StaticResource GlassButton}">
+        <Setter Property="HeightRequest" Value="48" />
+        <Setter Property="WidthRequest" Value="48" />
+        <Setter Property="CornerRadius" Value="24" />
+        <Setter Property="FontSize" Value="18" />
+    </Style>
+
+    <!-- Utility Button (full width pill) -->
+    <Style x:Key="GlassUtilityButton" TargetType="Button">
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light=#15000000, Dark=#15FFFFFF}" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextPrimaryLight}, Dark={StaticResource TextPrimaryDark}}" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="CornerRadius" Value="20" />
+        <Setter Property="HeightRequest" Value="40" />
+        <Setter Property="Padding" Value="20,0" />
+    </Style>
+
+    <!-- D-Pad Glass Direction Button -->
+    <Style x:Key="GlassDPadButton" TargetType="Button" BasedOn="{StaticResource GlassButton}">
+        <Setter Property="HeightRequest" Value="56" />
+        <Setter Property="WidthRequest" Value="56" />
+        <Setter Property="FontSize" Value="24" />
+    </Style>
+
+    <!-- D-Pad Glass Center Button -->
+    <Style x:Key="GlassDPadCenterButton" TargetType="Button">
+        <Setter Property="BackgroundColor" Value="{StaticResource Primary}" />
+        <Setter Property="TextColor" Value="{StaticResource White}" />
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="CornerRadius" Value="35" />
+        <Setter Property="HeightRequest" Value="70" />
+        <Setter Property="WidthRequest" Value="70" />
+    </Style>
+
 </ResourceDictionary>
