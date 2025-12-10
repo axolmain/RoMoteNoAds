@@ -31,11 +31,13 @@ public static class MauiProgram
         builder.Services.AddSingleton<DeviceSelectionViewModel>();
         builder.Services.AddSingleton<RemoteViewModel>();
         builder.Services.AddSingleton<ChannelsViewModel>();
+        builder.Services.AddSingleton<ShortcutsViewModel>();
 
         // Register Views
         builder.Services.AddSingleton<DeviceSelectionPage>();
         builder.Services.AddSingleton<RemotePage>();
         builder.Services.AddSingleton<ChannelsPage>();
+        builder.Services.AddSingleton<ShortcutsPage>();
 
 #if DEBUG
         builder.Logging.AddDebug();
