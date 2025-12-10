@@ -26,6 +26,25 @@ public partial class ShortcutsViewModel : BaseViewModel
     [ObservableProperty]
     private List<string> _recordedKeys = new();
 
+    // Editor properties
+    [ObservableProperty]
+    private bool _isEditorVisible;
+
+    [ObservableProperty]
+    private int _editorStep = 1;
+
+    [ObservableProperty]
+    private ObservableCollection<RokuChannel> _availableChannels = new();
+
+    [ObservableProperty]
+    private RokuChannel? _selectedChannel;
+
+    [ObservableProperty]
+    private string _newShortcutName = string.Empty;
+
+    [ObservableProperty]
+    private bool _isLoadingChannels;
+
     public ShortcutsViewModel(
         IShortcutService shortcutService,
         IRokuControlService controlService)
@@ -128,5 +147,87 @@ public partial class ShortcutsViewModel : BaseViewModel
         {
             RecordedKeys.Add(key);
         }
+    }
+
+    // Editor commands
+    [RelayCommand]
+    private async Task OpenEditorAsync()
+    {
+        EditorStep = 1;
+        SelectedChannel = null;
+        NewShortcutName = string.Empty;
+        IsEditorVisible = true;
+        await LoadChannelsAsync();
+    }
+
+    [RelayCommand]
+    private async Task LoadChannelsAsync()
+    {
+        try
+        {
+            IsLoadingChannels = true;
+            var channels = await _controlService.GetInstalledChannelsAsync();
+            AvailableChannels = new ObservableCollection<RokuChannel>(channels);
+        }
+        catch (Exception ex)
+        {
+            SetError($"Failed to load channels: {ex.Message}");
+        }
+        finally
+        {
+            IsLoadingChannels = false;
+        }
+    }
+
+    [RelayCommand]
+    private void SelectChannel(RokuChannel? channel)
+    {
+        if (channel == null)
+            return;
+
+        SelectedChannel = channel;
+        NewShortcutName = channel.Name;
+        EditorStep = 2;
+    }
+
+    [RelayCommand]
+    private void BackToChannelSelection()
+    {
+        EditorStep = 1;
+    }
+
+    [RelayCommand]
+    private async Task SaveShortcutAsync()
+    {
+        if (SelectedChannel == null || string.IsNullOrWhiteSpace(NewShortcutName))
+            return;
+
+        try
+        {
+            var shortcut = new Shortcut
+            {
+                Name = NewShortcutName.Trim(),
+                Type = ShortcutType.Channel,
+                ChannelId = SelectedChannel.Id,
+                IconUrl = SelectedChannel.IconUrl
+            };
+
+            await _shortcutService.SaveShortcutAsync(shortcut);
+            Shortcuts.Add(shortcut);
+            CloseEditor();
+        }
+        catch (Exception ex)
+        {
+            SetError($"Failed to save shortcut: {ex.Message}");
+        }
+    }
+
+    [RelayCommand]
+    private void CloseEditor()
+    {
+        IsEditorVisible = false;
+        EditorStep = 1;
+        SelectedChannel = null;
+        NewShortcutName = string.Empty;
     }
 }

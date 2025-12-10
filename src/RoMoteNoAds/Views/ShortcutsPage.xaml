@@ -96,9 +96,136 @@
         <!-- Add Button -->
         <Button Grid.Row="2"
                 Text="+ Add Shortcut"
+                Command="{Binding OpenEditorCommand}"
                 Style="{StaticResource PrimaryButton}"
                 HorizontalOptions="Center"
                 WidthRequest="200"
                 Margin="0,16,0,0" />
+
+        <!-- Editor Modal Overlay -->
+        <Grid Grid.RowSpan="3"
+              IsVisible="{Binding IsEditorVisible}"
+              BackgroundColor="{AppThemeBinding Light=#80FFFFFF, Dark=#80000000}">
+
+            <!-- Step 1: Select Channel -->
+            <Frame Style="{StaticResource GlassCard}"
+                   VerticalOptions="Center"
+                   HorizontalOptions="Center"
+                   WidthRequest="400"
+                   MaximumHeightRequest="500"
+                   Padding="20"
+                   IsVisible="{Binding EditorStep, Converter={toolkit:IsEqualConverter}, ConverterParameter=1}">
+                <Grid RowDefinitions="Auto,*,Auto" RowSpacing="16">
+                    <Label Grid.Row="0"
+                           Text="Select a Channel"
+                           Style="{StaticResource TitleLabel}"
+                           HorizontalOptions="Center" />
+
+                    <!-- Loading indicator -->
+                    <ActivityIndicator Grid.Row="1"
+                                       IsRunning="{Binding IsLoadingChannels}"
+                                       IsVisible="{Binding IsLoadingChannels}"
+                                       HorizontalOptions="Center"
+                                       VerticalOptions="Center" />
+
+                    <!-- Channel Grid -->
+                    <CollectionView Grid.Row="1"
+                                   ItemsSource="{Binding AvailableChannels}"
+                                   IsVisible="{Binding IsLoadingChannels, Converter={toolkit:InvertedBoolConverter}}">
+                        <CollectionView.ItemsLayout>
+                            <GridItemsLayout Orientation="Vertical"
+                                            Span="3"
+                                            HorizontalItemSpacing="8"
+                                            VerticalItemSpacing="8" />
+                        </CollectionView.ItemsLayout>
+
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="models:RokuChannel">
+                                <Frame BackgroundColor="{AppThemeBinding Light=#20000000, Dark=#20FFFFFF}"
+                                       CornerRadius="12"
+                                       Padding="8"
+                                       HeightRequest="80"
+                                       HasShadow="False"
+                                       BorderColor="Transparent">
+                                    <Frame.GestureRecognizers>
+                                        <TapGestureRecognizer
+                                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ShortcutsViewModel}}, Path=SelectChannelCommand}"
+                                            CommandParameter="{Binding .}" />
+                                    </Frame.GestureRecognizers>
+
+                                    <VerticalStackLayout Spacing="4" VerticalOptions="Center">
+                                        <Image Source="{Binding IconUrl}"
+                                               HeightRequest="40"
+                                               WidthRequest="40"
+                                               Aspect="AspectFit"
+                                               HorizontalOptions="Center" />
+                                        <Label Text="{Binding Name}"
+                                               Style="{StaticResource SubtitleLabel}"
+                                               HorizontalOptions="Center"
+                                               MaxLines="1"
+                                               LineBreakMode="TailTruncation"
+                                               FontSize="10" />
+                                    </VerticalStackLayout>
+                                </Frame>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+
+                    <!-- Cancel Button -->
+                    <Button Grid.Row="2"
+                            Text="Cancel"
+                            Command="{Binding CloseEditorCommand}"
+                            Style="{StaticResource GlassUtilityButton}"
+                            HorizontalOptions="Center"
+                            WidthRequest="120" />
+                </Grid>
+            </Frame>
+
+            <!-- Step 2: Name and Save -->
+            <Frame Style="{StaticResource GlassCard}"
+                   VerticalOptions="Center"
+                   HorizontalOptions="Center"
+                   WidthRequest="320"
+                   Padding="20"
+                   IsVisible="{Binding EditorStep, Converter={toolkit:IsEqualConverter}, ConverterParameter=2}">
+                <VerticalStackLayout Spacing="16">
+                    <Label Text="Name Your Shortcut"
+                           Style="{StaticResource TitleLabel}"
+                           HorizontalOptions="Center" />
+
+                    <!-- Selected Channel Preview -->
+                    <HorizontalStackLayout Spacing="12" HorizontalOptions="Center">
+                        <Image Source="{Binding SelectedChannel.IconUrl}"
+                               HeightRequest="48"
+                               WidthRequest="48"
+                               Aspect="AspectFit" />
+                        <Label Text="{Binding SelectedChannel.Name}"
+                               Style="{StaticResource BodyLabel}"
+                               VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+
+                    <!-- Name Entry -->
+                    <Entry Placeholder="Shortcut name"
+                           Text="{Binding NewShortcutName}" />
+
+                    <!-- Buttons -->
+                    <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                        <Button Grid.Column="0"
+                                Text="Back"
+                                Command="{Binding BackToChannelSelectionCommand}"
+                                Style="{StaticResource GlassUtilityButton}" />
+                        <Button Grid.Column="1"
+                                Text="Save"
+                                Command="{Binding SaveShortcutCommand}"
+                                Style="{StaticResource PrimaryButton}"
+                                HeightRequest="40" />
+                        <Button Grid.Column="2"
+                                Text="Cancel"
+                                Command="{Binding CloseEditorCommand}"
+                                Style="{StaticResource GlassUtilityButton}" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Frame>
+        </Grid>
     </Grid>
 </ContentPage>
