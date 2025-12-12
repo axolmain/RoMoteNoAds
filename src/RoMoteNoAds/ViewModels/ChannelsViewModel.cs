@@ -1,8 +1,8 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using RoMote.Roku;
 using RoMoteNoAds.Models;
-using RoMoteNoAds.Services;
 
 namespace RoMoteNoAds.ViewModels;
 
@@ -11,7 +11,7 @@ namespace RoMoteNoAds.ViewModels;
 /// </summary>
 public partial class ChannelsViewModel : BaseViewModel
 {
-    private readonly IRokuControlService _controlService;
+    private readonly IRokuService _rokuService;
 
     [ObservableProperty]
     private ObservableCollection<RokuChannel> _channels = new();
@@ -22,9 +22,9 @@ public partial class ChannelsViewModel : BaseViewModel
     [ObservableProperty]
     private bool _isRefreshing;
 
-    public ChannelsViewModel(IRokuControlService controlService)
+    public ChannelsViewModel(IRokuService rokuService)
     {
-        _controlService = controlService;
+        _rokuService = rokuService;
         Title = "Channels";
     }
 
@@ -36,7 +36,7 @@ public partial class ChannelsViewModel : BaseViewModel
     [RelayCommand]
     private async Task RefreshChannelsAsync()
     {
-        if (_controlService.CurrentDevice == null)
+        if (_rokuService.CurrentDevice == null)
         {
             SetError("No device connected");
             return;
@@ -47,16 +47,17 @@ public partial class ChannelsViewModel : BaseViewModel
             IsRefreshing = true;
             ClearError();
 
-            var channels = await _controlService.GetInstalledChannelsAsync();
+            var libChannels = await _rokuService.GetInstalledChannelsAsync();
 
             // Get active channel
-            var active = await _controlService.GetActiveChannelAsync();
-            ActiveChannel = active;
+            var libActive = await _rokuService.GetActiveChannelAsync();
+            ActiveChannel = libActive != null ? RokuChannel.FromLibrary(libActive) : null;
 
             Channels.Clear();
-            foreach (var channel in channels.OrderBy(c => c.Name))
+            foreach (var libChannel in libChannels.OrderBy(c => c.Name))
             {
-                channel.IsActive = active?.Id == channel.Id;
+                var channel = RokuChannel.FromLibrary(libChannel);
+                channel.IsActive = libActive?.Id == channel.Id;
                 await LoadChannelIconAsync(channel);
                 Channels.Add(channel);
             }
@@ -77,7 +78,7 @@ public partial class ChannelsViewModel : BaseViewModel
         if (channel == null)
             return;
 
-        if (_controlService.CurrentDevice == null)
+        if (_rokuService.CurrentDevice == null)
         {
             SetError("No device connected");
             return;
@@ -88,7 +89,7 @@ public partial class ChannelsViewModel : BaseViewModel
             IsBusy = true;
             TriggerHaptic();
 
-            var success = await _controlService.LaunchChannelAsync(channel.Id);
+            var success = await _rokuService.LaunchChannelAsync(channel.Id);
             if (success)
             {
                 // Update active state

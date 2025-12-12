@@ -1,5 +1,6 @@
 using CommunityToolkit.Maui;
 using Microsoft.Extensions.Logging;
+using RoMote.Roku;
 using RoMoteNoAds.Services;
 using RoMoteNoAds.ViewModels;
 using RoMoteNoAds.Views;
@@ -22,11 +23,9 @@ public static class MauiProgram
 
         // Register Services
         builder.Services.AddSingleton<HttpClient>();
-        builder.Services.AddSingleton<IDeviceStorageService, DeviceStorageService>();
-        builder.Services.AddSingleton<IRokuDiscoveryService, RokuDiscoveryService>();
-        builder.Services.AddSingleton<IRokuControlService, RokuControlService>();
+        builder.Services.AddSingleton<IRokuService, RokuService>();
+        builder.Services.AddSingleton<IStorageService, StorageService>();
         builder.Services.AddSingleton<IShortcutService, ShortcutService>();
-        builder.Services.AddSingleton<IWakeOnLanService, WakeOnLanService>();
 
         // Register ViewModels
         builder.Services.AddSingleton<DeviceSelectionViewModel>();

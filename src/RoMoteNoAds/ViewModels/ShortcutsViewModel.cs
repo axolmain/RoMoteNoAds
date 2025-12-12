@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using RoMote.Roku;
 using RoMoteNoAds.Models;
 using RoMoteNoAds.Services;
 
@@ -12,7 +13,7 @@ namespace RoMoteNoAds.ViewModels;
 public partial class ShortcutsViewModel : BaseViewModel
 {
     private readonly IShortcutService _shortcutService;
-    private readonly IRokuControlService _controlService;
+    private readonly IRokuService _rokuService;
 
     [ObservableProperty]
     private ObservableCollection<Shortcut> _shortcuts = new();
@@ -47,10 +48,10 @@ public partial class ShortcutsViewModel : BaseViewModel
 
     public ShortcutsViewModel(
         IShortcutService shortcutService,
-        IRokuControlService controlService)
+        IRokuService rokuService)
     {
         _shortcutService = shortcutService;
-        _controlService = controlService;
+        _rokuService = rokuService;
         Title = "Shortcuts";
     }
 
@@ -166,8 +167,9 @@ public partial class ShortcutsViewModel : BaseViewModel
         try
         {
             IsLoadingChannels = true;
-            var channels = await _controlService.GetInstalledChannelsAsync();
-            AvailableChannels = new ObservableCollection<RokuChannel>(channels);
+            var libChannels = await _rokuService.GetInstalledChannelsAsync();
+            AvailableChannels = new ObservableCollection<RokuChannel>(
+                libChannels.Select(RokuChannel.FromLibrary));
         }
         catch (Exception ex)
         {

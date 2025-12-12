@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using RoMote.Roku;
 using RoMoteNoAds.Models;
 using RoMoteNoAds.Services;
 
@@ -11,9 +12,8 @@ namespace RoMoteNoAds.ViewModels;
 /// </summary>
 public partial class DeviceSelectionViewModel : BaseViewModel, IDisposable
 {
-    private readonly IRokuDiscoveryService _discoveryService;
-    private readonly IRokuControlService _controlService;
-    private readonly IDeviceStorageService _storageService;
+    private readonly IRokuService _rokuService;
+    private readonly IStorageService _storageService;
     private readonly PeriodicTimer _autoScanTimer;
     private CancellationTokenSource? _autoScanCts;
     private bool _disposed;
@@ -33,18 +33,16 @@ public partial class DeviceSelectionViewModel : BaseViewModel, IDisposable
     private string _manualIpAddress = string.Empty;
 
     public DeviceSelectionViewModel(
-        IRokuDiscoveryService discoveryService,
-        IRokuControlService controlService,
-        IDeviceStorageService storageService)
+        IRokuService rokuService,
+        IStorageService storageService)
     {
-        _discoveryService = discoveryService;
-        _controlService = controlService;
+        _rokuService = rokuService;
         _storageService = storageService;
         _autoScanTimer = new PeriodicTimer(AutoScanInterval);
 
         Title = "Devices";
 
-        _discoveryService.DeviceDiscovered += OnDeviceDiscovered;
+        _rokuService.DeviceDiscovered += OnDeviceDiscovered;
     }
 
     public async Task InitializeAsync()
@@ -95,13 +93,14 @@ public partial class DeviceSelectionViewModel : BaseViewModel, IDisposable
 
         try
         {
-            var discoveredDevices = await _discoveryService.DiscoverDevicesAsync(
+            var discoveredDevices = await _rokuService.DiscoverDevicesAsync(
                 TimeSpan.FromSeconds(5), cancellationToken);
 
             await MainThread.InvokeOnMainThreadAsync(async () =>
             {
-                foreach (var device in discoveredDevices)
+                foreach (var libDevice in discoveredDevices)
                 {
+                    var device = RokuDevice.FromLibrary(libDevice);
                     if (!Devices.Any(d => d.SerialNumber == device.SerialNumber))
                     {
                         Devices.Add(device);
@@ -129,7 +128,7 @@ public partial class DeviceSelectionViewModel : BaseViewModel, IDisposable
         _autoScanCts?.Cancel();
         _autoScanCts?.Dispose();
         _autoScanTimer.Dispose();
-        _discoveryService.DeviceDiscovered -= OnDeviceDiscovered;
+        _rokuService.DeviceDiscovered -= OnDeviceDiscovered;
     }
 
     [RelayCommand]
@@ -154,11 +153,12 @@ public partial class DeviceSelectionViewModel : BaseViewModel, IDisposable
             IsScanning = true;
             ClearError();
 
-            var discoveredDevices = await _discoveryService.DiscoverDevicesAsync(
+            var discoveredDevices = await _rokuService.DiscoverDevicesAsync(
                 TimeSpan.FromSeconds(5));
 
-            foreach (var device in discoveredDevices)
+            foreach (var libDevice in discoveredDevices)
             {
+                var device = RokuDevice.FromLibrary(libDevice);
                 if (!Devices.Any(d => d.SerialNumber == device.SerialNumber))
                 {
                     Devices.Add(device);
@@ -195,14 +195,15 @@ public partial class DeviceSelectionViewModel : BaseViewModel, IDisposable
             IsBusy = true;
             ClearError();
 
-            var device = await _discoveryService.ValidateDeviceAsync(ManualIpAddress);
+            var libDevice = await _rokuService.ValidateDeviceAsync(ManualIpAddress);
 
-            if (device == null)
+            if (libDevice == null)
             {
                 SetError("Could not connect to Roku at this address");
                 return;
             }
 
+            var device = RokuDevice.FromLibrary(libDevice);
             if (!Devices.Any(d => d.SerialNumber == device.SerialNumber))
             {
                 Devices.Add(device);
@@ -237,7 +238,7 @@ public partial class DeviceSelectionViewModel : BaseViewModel, IDisposable
         }
 
         SelectedDevice = device;
-        _controlService.CurrentDevice = device;
+        _rokuService.CurrentDevice = device.ToLibrary();
 
         await _storageService.SetLastUsedDeviceAsync(device);
     }
@@ -254,7 +255,7 @@ public partial class DeviceSelectionViewModel : BaseViewModel, IDisposable
         if (SelectedDevice?.SerialNumber == device.SerialNumber)
         {
             SelectedDevice = Devices.FirstOrDefault();
-            _controlService.CurrentDevice = SelectedDevice;
+            _rokuService.CurrentDevice = SelectedDevice?.ToLibrary();
         }
     }
 
@@ -266,9 +267,10 @@ public partial class DeviceSelectionViewModel : BaseViewModel, IDisposable
 
         try
         {
-            var updated = await _discoveryService.RefreshDeviceInfoAsync(device);
-            if (updated != null)
+            var libUpdated = await _rokuService.RefreshDeviceInfoAsync(device.ToLibrary());
+            if (libUpdated != null)
             {
+                var updated = RokuDevice.FromLibrary(libUpdated);
                 var index = Devices.IndexOf(device);
                 if (index >= 0)
                 {
@@ -280,7 +282,7 @@ public partial class DeviceSelectionViewModel : BaseViewModel, IDisposable
                     if (SelectedDevice?.SerialNumber == updated.SerialNumber)
                     {
                         SelectedDevice = updated;
-                        _controlService.CurrentDevice = updated;
+                        _rokuService.CurrentDevice = updated.ToLibrary();
                     }
                 }
             }
@@ -295,10 +297,11 @@ public partial class DeviceSelectionViewModel : BaseViewModel, IDisposable
         }
     }
 
-    private void OnDeviceDiscovered(object? sender, RokuDevice device)
+    private void OnDeviceDiscovered(object? sender, RoMote.Roku.Models.RokuDevice libDevice)
     {
         MainThread.BeginInvokeOnMainThread(() =>
         {
+            var device = RokuDevice.FromLibrary(libDevice);
             if (!Devices.Any(d => d.SerialNumber == device.SerialNumber))
             {
                 Devices.Add(device);

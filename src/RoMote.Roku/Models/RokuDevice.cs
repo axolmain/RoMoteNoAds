@@ -1,12 +1,9 @@
-using CommunityToolkit.Mvvm.ComponentModel;
-using LibRokuDevice = RoMote.Roku.Models.RokuDevice;
-
-namespace RoMoteNoAds.Models;
+namespace RoMote.Roku.Models;
 
 /// <summary>
-/// App-specific wrapper around library RokuDevice with UI-bindable properties.
+/// Represents a Roku device discovered on the network.
 /// </summary>
-public partial class RokuDevice : ObservableObject
+public class RokuDevice
 {
     /// <summary>
     /// The IP address of the Roku device.
@@ -89,12 +86,6 @@ public partial class RokuDevice : ObservableObject
     public string DisplayName => !string.IsNullOrEmpty(CustomName) ? CustomName : FriendlyName;
 
     /// <summary>
-    /// Whether this device is currently selected as the active device.
-    /// </summary>
-    [ObservableProperty]
-    private bool _isSelected;
-
-    /// <summary>
     /// Last time this device was successfully contacted.
     /// </summary>
     public DateTime? LastSeen { get; set; }
@@ -115,55 +106,5 @@ public partial class RokuDevice : ObservableObject
         return !string.IsNullOrEmpty(SerialNumber)
             ? SerialNumber.GetHashCode()
             : IpAddress.GetHashCode();
-    }
-
-    /// <summary>
-    /// Creates an app model from a library model.
-    /// </summary>
-    public static RokuDevice FromLibrary(LibRokuDevice lib)
-    {
-        return new RokuDevice
-        {
-            IpAddress = lib.IpAddress,
-            Port = lib.Port,
-            FriendlyName = lib.FriendlyName,
-            SerialNumber = lib.SerialNumber,
-            ModelName = lib.ModelName,
-            ModelNumber = lib.ModelNumber,
-            IsTv = lib.IsTv,
-            SupportsTvPowerControl = lib.SupportsTvPowerControl,
-            SupportsAudioVolumeControl = lib.SupportsAudioVolumeControl,
-            SupportsFindRemote = lib.SupportsFindRemote,
-            SupportsWakeOnWlan = lib.SupportsWakeOnWlan,
-            WifiMacAddress = lib.WifiMacAddress,
-            SoftwareVersion = lib.SoftwareVersion,
-            CustomName = lib.CustomName,
-            LastSeen = lib.LastSeen
-        };
-    }
-
-    /// <summary>
-    /// Converts to a library model.
-    /// </summary>
-    public LibRokuDevice ToLibrary()
-    {
-        return new LibRokuDevice
-        {
-            IpAddress = IpAddress,
-            Port = Port,
-            FriendlyName = FriendlyName,
-            SerialNumber = SerialNumber,
-            ModelName = ModelName,
-            ModelNumber = ModelNumber,
-            IsTv = IsTv,
-            SupportsTvPowerControl = SupportsTvPowerControl,
-            SupportsAudioVolumeControl = SupportsAudioVolumeControl,
-            SupportsFindRemote = SupportsFindRemote,
-            SupportsWakeOnWlan = SupportsWakeOnWlan,
-            WifiMacAddress = WifiMacAddress,
-            SoftwareVersion = SoftwareVersion,
-            CustomName = CustomName,
-            LastSeen = LastSeen
-        };
     }
 }

@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using RoMote.Roku;
 using RoMoteNoAds.Models;
 using RoMoteNoAds.Services;
 
@@ -10,9 +11,8 @@ namespace RoMoteNoAds.ViewModels;
 /// </summary>
 public partial class RemoteViewModel : BaseViewModel
 {
-    private readonly IRokuControlService _controlService;
-    private readonly IDeviceStorageService _storageService;
-    private readonly IWakeOnLanService _wakeOnLanService;
+    private readonly IRokuService _rokuService;
+    private readonly IStorageService _storageService;
 
     [ObservableProperty]
     private RokuDevice? _currentDevice;
@@ -30,17 +30,15 @@ public partial class RemoteViewModel : BaseViewModel
     private bool _supportsPower;
 
     public RemoteViewModel(
-        IRokuControlService controlService,
-        IDeviceStorageService storageService,
-        IWakeOnLanService wakeOnLanService)
+        IRokuService rokuService,
+        IStorageService storageService)
     {
-        _controlService = controlService;
+        _rokuService = rokuService;
         _storageService = storageService;
-        _wakeOnLanService = wakeOnLanService;
 
         Title = "Remote";
 
-        _controlService.CommandFailed += OnCommandFailed;
+        _rokuService.CommandFailed += OnCommandFailed;
     }
 
     public async Task InitializeAsync()
@@ -49,14 +47,15 @@ public partial class RemoteViewModel : BaseViewModel
         if (lastDevice != null)
         {
             CurrentDevice = lastDevice;
-            _controlService.CurrentDevice = lastDevice;
+            _rokuService.CurrentDevice = lastDevice.ToLibrary();
             UpdateCapabilities();
         }
     }
 
     public void RefreshDevice()
     {
-        CurrentDevice = _controlService.CurrentDevice;
+        var libDevice = _rokuService.CurrentDevice;
+        CurrentDevice = libDevice != null ? RokuDevice.FromLibrary(libDevice) : null;
         UpdateCapabilities();
     }
 
@@ -135,12 +134,12 @@ public partial class RemoteViewModel : BaseViewModel
         if (!string.IsNullOrEmpty(CurrentDevice.WifiMacAddress))
         {
             System.Diagnostics.Debug.WriteLine($"[Power] Sending WoL to {CurrentDevice.WifiMacAddress}");
-            await _wakeOnLanService.WakeAsync(CurrentDevice.WifiMacAddress);
+            await _rokuService.WakeAsync(CurrentDevice.WifiMacAddress);
         }
 
         // Just send the Power command - don't check result or show errors
         // Many Roku TVs return 403 but still toggle power via CEC
-        _ = _controlService.SendKeyPressAsync(RokuKey.Power);
+        _ = _rokuService.SendKeyPressAsync(RokuKey.Power);
 
         System.Diagnostics.Debug.WriteLine("[Power] Power command sent");
     }
@@ -171,7 +170,7 @@ public partial class RemoteViewModel : BaseViewModel
         try
         {
             IsBusy = true;
-            await _controlService.SendTextAsync(KeyboardText);
+            await _rokuService.SendTextAsync(KeyboardText);
             KeyboardText = string.Empty;
             IsKeyboardVisible = false;
             TriggerHaptic();
@@ -209,7 +208,7 @@ public partial class RemoteViewModel : BaseViewModel
 
         TriggerHaptic();
 
-        var success = await _controlService.SendKeyPressAsync(key);
+        var success = await _rokuService.SendKeyPressAsync(key);
         if (!success)
         {
             // Error already set by control service event

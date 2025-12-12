@@ -1,7 +1,9 @@
+using LibRokuChannel = RoMote.Roku.Models.RokuChannel;
+
 namespace RoMoteNoAds.Models;
 
 /// <summary>
-/// Represents an installed channel/app on a Roku device.
+/// App-specific wrapper around library RokuChannel with UI-bindable properties.
 /// </summary>
 public class RokuChannel
 {
@@ -31,7 +33,7 @@ public class RokuChannel
     public string IconUrl { get; set; } = string.Empty;
 
     /// <summary>
-    /// Cached icon image source.
+    /// Cached icon image source (UI-specific).
     /// </summary>
     public ImageSource? IconSource { get; set; }
 
@@ -57,4 +59,36 @@ public class RokuChannel
     }
 
     public override int GetHashCode() => Id.GetHashCode();
+
+    /// <summary>
+    /// Creates an app model from a library model.
+    /// </summary>
+    public static RokuChannel FromLibrary(LibRokuChannel lib)
+    {
+        return new RokuChannel
+        {
+            Id = lib.Id,
+            Name = lib.Name,
+            Type = lib.Type,
+            Version = lib.Version,
+            IconUrl = lib.IconUrl,
+            IsActive = lib.IsActive
+        };
+    }
+
+    /// <summary>
+    /// Converts to a library model.
+    /// </summary>
+    public LibRokuChannel ToLibrary()
+    {
+        return new LibRokuChannel
+        {
+            Id = Id,
+            Name = Name,
+            Type = Type,
+            Version = Version,
+            IconUrl = IconUrl,
+            IsActive = IsActive
+        };
+    }
 }

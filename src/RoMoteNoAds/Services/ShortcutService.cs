@@ -1,27 +1,67 @@
 using System.Text.Json;
+using RoMote.Roku;
 using RoMoteNoAds.Models;
 
 namespace RoMoteNoAds.Services;
 
 /// <summary>
-/// Service for managing and executing custom shortcuts.
+/// Service for managing, recording, and executing custom shortcuts.
 /// </summary>
 public class ShortcutService : IShortcutService
 {
     private const string ShortcutsKey = "saved_shortcuts";
     private const int KeySequenceDelayMs = 100;
 
-    private readonly IRokuControlService _controlService;
+    private readonly IRokuService _rokuService;
     private readonly JsonSerializerOptions _jsonOptions = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         WriteIndented = false
     };
 
-    public ShortcutService(IRokuControlService controlService)
+    private readonly List<string> _recordedKeys = [];
+    private bool _isRecording;
+
+    public ShortcutService(IRokuService rokuService)
     {
-        _controlService = controlService;
+        _rokuService = rokuService;
     }
+
+    #region Recording
+
+    public bool IsRecording => _isRecording;
+
+    public void StartRecording()
+    {
+        _recordedKeys.Clear();
+        _isRecording = true;
+        System.Diagnostics.Debug.WriteLine("[ShortcutService] Recording started");
+    }
+
+    public IReadOnlyList<string> StopRecording()
+    {
+        _isRecording = false;
+        var result = _recordedKeys.ToList();
+        System.Diagnostics.Debug.WriteLine($"[ShortcutService] Recording stopped. Captured {result.Count} keys: {string.Join(", ", result)}");
+        return result;
+    }
+
+    public async Task<bool> SendKeyPressAsync(string key)
+    {
+        // Capture key if recording
+        if (_isRecording)
+        {
+            _recordedKeys.Add(key);
+            System.Diagnostics.Debug.WriteLine($"[ShortcutService] Recorded key: {key}");
+        }
+
+        // Forward to Roku service
+        return await _rokuService.SendKeyPressAsync(key);
+    }
+
+    #endregion
+
+    #region Persistence
 
     public async Task<IEnumerable<Shortcut>> GetShortcutsAsync()
     {
@@ -97,24 +137,6 @@ public class ShortcutService : IShortcutService
         });
     }
 
-    public async Task<bool> ExecuteShortcutAsync(Shortcut shortcut)
-    {
-        try
-        {
-            return shortcut.Type switch
-            {
-                ShortcutType.Channel => await ExecuteChannelShortcutAsync(shortcut),
-                ShortcutType.KeySequence => await ExecuteKeySequenceAsync(shortcut),
-                _ => false
-            };
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"Error executing shortcut: {ex.Message}");
-            return false;
-        }
-    }
-
     public async Task ReorderShortcutsAsync(IEnumerable<Shortcut> shortcuts)
     {
         await Task.Run(() =>
@@ -135,12 +157,34 @@ public class ShortcutService : IShortcutService
         });
     }
 
+    #endregion
+
+    #region Execution
+
+    public async Task<bool> ExecuteShortcutAsync(Shortcut shortcut)
+    {
+        try
+        {
+            return shortcut.Type switch
+            {
+                ShortcutType.Channel => await ExecuteChannelShortcutAsync(shortcut),
+                ShortcutType.KeySequence => await ExecuteKeySequenceAsync(shortcut),
+                _ => false
+            };
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error executing shortcut: {ex.Message}");
+            return false;
+        }
+    }
+
     private async Task<bool> ExecuteChannelShortcutAsync(Shortcut shortcut)
     {
         if (string.IsNullOrEmpty(shortcut.ChannelId))
             return false;
 
-        return await _controlService.LaunchChannelAsync(shortcut.ChannelId);
+        return await _rokuService.LaunchChannelAsync(shortcut.ChannelId);
     }
 
     private async Task<bool> ExecuteKeySequenceAsync(Shortcut shortcut)
@@ -150,7 +194,7 @@ public class ShortcutService : IShortcutService
 
         foreach (var key in shortcut.KeySequence)
         {
-            var success = await _controlService.SendKeyPressAsync(key);
+            var success = await _rokuService.SendKeyPressAsync(key);
             if (!success)
                 return false;
 
@@ -160,20 +204,23 @@ public class ShortcutService : IShortcutService
         return true;
     }
 
+    #endregion
+
+    #region Private Helpers
+
     private List<Shortcut> GetShortcutsSync()
     {
         try
         {
             var json = Preferences.Get(ShortcutsKey, string.Empty);
             if (string.IsNullOrEmpty(json))
-                return new List<Shortcut>();
+                return [];
 
-            return JsonSerializer.Deserialize<List<Shortcut>>(json, _jsonOptions)
-                   ?? new List<Shortcut>();
+            return JsonSerializer.Deserialize<List<Shortcut>>(json, _jsonOptions) ?? [];
         }
         catch
         {
-            return new List<Shortcut>();
+            return [];
         }
     }
 
@@ -182,4 +229,6 @@ public class ShortcutService : IShortcutService
         var json = JsonSerializer.Serialize(shortcuts, _jsonOptions);
         Preferences.Set(ShortcutsKey, json);
     }
+
+    #endregion
 }
