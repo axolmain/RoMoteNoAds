@@ -9,11 +9,16 @@ namespace RoMoteNoAds.ViewModels;
 /// <summary>
 /// ViewModel for the device selection page.
 /// </summary>
-public partial class DeviceSelectionViewModel : BaseViewModel
+public partial class DeviceSelectionViewModel : BaseViewModel, IDisposable
 {
     private readonly IRokuDiscoveryService _discoveryService;
     private readonly IRokuControlService _controlService;
     private readonly IDeviceStorageService _storageService;
+    private readonly PeriodicTimer _autoScanTimer;
+    private CancellationTokenSource? _autoScanCts;
+    private bool _disposed;
+
+    private static readonly TimeSpan AutoScanInterval = TimeSpan.FromSeconds(30);
 
     [ObservableProperty]
     private ObservableCollection<RokuDevice> _devices = new();
@@ -35,6 +40,7 @@ public partial class DeviceSelectionViewModel : BaseViewModel
         _discoveryService = discoveryService;
         _controlService = controlService;
         _storageService = storageService;
+        _autoScanTimer = new PeriodicTimer(AutoScanInterval);
 
         Title = "Devices";
 
@@ -55,6 +61,75 @@ public partial class DeviceSelectionViewModel : BaseViewModel
                 await SelectDeviceAsync(device);
             }
         }
+
+        // Start background auto-scan
+        StartAutoScan();
+    }
+
+    private void StartAutoScan()
+    {
+        _autoScanCts = new CancellationTokenSource();
+        _ = RunAutoScanLoopAsync(_autoScanCts.Token);
+    }
+
+    private async Task RunAutoScanLoopAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            while (await _autoScanTimer.WaitForNextTickAsync(cancellationToken))
+            {
+                await ScanForDevicesInBackgroundAsync(cancellationToken);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Expected when stopping
+        }
+    }
+
+    private async Task ScanForDevicesInBackgroundAsync(CancellationToken cancellationToken)
+    {
+        // Skip if manual scan is in progress
+        if (IsScanning)
+            return;
+
+        try
+        {
+            var discoveredDevices = await _discoveryService.DiscoverDevicesAsync(
+                TimeSpan.FromSeconds(5), cancellationToken);
+
+            await MainThread.InvokeOnMainThreadAsync(async () =>
+            {
+                foreach (var device in discoveredDevices)
+                {
+                    if (!Devices.Any(d => d.SerialNumber == device.SerialNumber))
+                    {
+                        Devices.Add(device);
+                        await _storageService.SaveDeviceAsync(device);
+                    }
+                }
+            });
+        }
+        catch (OperationCanceledException)
+        {
+            // Expected when cancelling
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Background scan error: {ex.Message}");
+        }
+    }
+
+    public void Dispose()
+    {
+        if (_disposed)
+            return;
+
+        _disposed = true;
+        _autoScanCts?.Cancel();
+        _autoScanCts?.Dispose();
+        _autoScanTimer.Dispose();
+        _discoveryService.DeviceDiscovered -= OnDeviceDiscovered;
     }
 
     [RelayCommand]

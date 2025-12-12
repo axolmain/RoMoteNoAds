@@ -26,6 +26,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<IRokuDiscoveryService, RokuDiscoveryService>();
         builder.Services.AddSingleton<IRokuControlService, RokuControlService>();
         builder.Services.AddSingleton<IShortcutService, ShortcutService>();
+        builder.Services.AddSingleton<IWakeOnLanService, WakeOnLanService>();
 
         // Register ViewModels
         builder.Services.AddSingleton<DeviceSelectionViewModel>();

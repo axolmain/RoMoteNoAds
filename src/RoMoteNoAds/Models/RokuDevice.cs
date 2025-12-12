@@ -58,6 +58,16 @@ public partial class RokuDevice : ObservableObject
     public bool SupportsFindRemote { get; set; }
 
     /// <summary>
+    /// Whether the device supports Wake-on-WLAN.
+    /// </summary>
+    public bool SupportsWakeOnWlan { get; set; }
+
+    /// <summary>
+    /// The WiFi MAC address of the device.
+    /// </summary>
+    public string? WifiMacAddress { get; set; }
+
+    /// <summary>
     /// The software version running on the device.
     /// </summary>
     public string SoftwareVersion { get; set; } = string.Empty;

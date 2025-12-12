@@ -7,12 +7,13 @@
              x:DataType="vm:RemoteViewModel"
              Title="Remote">
 
-    <Grid RowDefinitions="Auto,*" Padding="16">
+    <Grid RowDefinitions="Auto,*,Auto" Padding="20">
         <!-- Error Banner -->
         <Border Grid.Row="0"
                 BackgroundColor="{StaticResource Error}"
                 Padding="12,8"
                 StrokeShape="RoundRectangle 8"
+                Margin="0,0,0,12"
                 IsVisible="{Binding ErrorMessage, Converter={toolkit:IsStringNotNullOrEmptyConverter}}">
             <Label Text="{Binding ErrorMessage}"
                    TextColor="White"
@@ -20,147 +21,171 @@
                    HorizontalOptions="Center" />
         </Border>
 
-        <!-- Main Remote Layout -->
-        <Grid Grid.Row="1" Padding="0,8,0,0">
-            <!-- Glass Remote Card (centered) -->
-            <Frame Style="{StaticResource GlassCard}"
+        <!-- Top Bar: Power + Device Name -->
+        <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto" Margin="0,0,0,20">
+            <!-- Power Button -->
+            <Button Grid.Column="0"
+                    Text="⏻"
+                    Command="{Binding PowerToggleCommand}"
+                    Style="{StaticResource PowerButton}" />
+
+            <!-- Device Name -->
+            <Label Grid.Column="1"
+                   Text="{Binding CurrentDevice.DisplayName, FallbackValue='No Device'}"
+                   Style="{StaticResource SubtitleLabel}"
+                   VerticalOptions="Center"
                    HorizontalOptions="Center"
-                   VerticalOptions="Start"
-                   MaximumWidthRequest="340">
-                <VerticalStackLayout Spacing="20">
+                   MaxLines="1"
+                   LineBreakMode="TailTruncation" />
 
-                    <!-- Top Bar: Power + Device Name -->
-                    <Grid ColumnDefinitions="Auto,*">
-                        <!-- Power Button -->
-                        <Button Grid.Column="0"
-                                Text="⏻"
-                                Command="{Binding PowerToggleCommand}"
-                                Style="{StaticResource PowerButton}"
-                                IsVisible="{Binding SupportsPower}" />
-
-                        <!-- Device Name -->
-                        <Label Grid.Column="1"
-                               Text="{Binding CurrentDevice.DisplayName, FallbackValue='No Device'}"
-                               Style="{StaticResource SubtitleLabel}"
-                               VerticalOptions="Center"
-                               HorizontalOptions="End"
-                               MaxLines="1"
-                               LineBreakMode="TailTruncation" />
-                    </Grid>
-
-                    <!-- D-Pad with Volume Strip -->
-                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
-                        <!-- D-Pad -->
-                        <Grid Grid.Column="0"
-                              RowDefinitions="56,70,56"
-                              ColumnDefinitions="56,70,56"
-                              RowSpacing="8"
-                              ColumnSpacing="8"
-                              HorizontalOptions="Center">
-
-                            <!-- Up -->
-                            <Button Grid.Row="0" Grid.Column="1"
-                                    Text="▲"
-                                    Command="{Binding PressUpCommand}"
-                                    Style="{StaticResource GlassDPadButton}" />
-
-                            <!-- Left -->
-                            <Button Grid.Row="1" Grid.Column="0"
-                                    Text="◀"
-                                    Command="{Binding PressLeftCommand}"
-                                    Style="{StaticResource GlassDPadButton}" />
-
-                            <!-- OK/Select -->
-                            <Button Grid.Row="1" Grid.Column="1"
-                                    Text="OK"
-                                    Command="{Binding PressSelectCommand}"
-                                    Style="{StaticResource GlassDPadCenterButton}" />
-
-                            <!-- Right -->
-                            <Button Grid.Row="1" Grid.Column="2"
-                                    Text="▶"
-                                    Command="{Binding PressRightCommand}"
-                                    Style="{StaticResource GlassDPadButton}" />
-
-                            <!-- Down -->
-                            <Button Grid.Row="2" Grid.Column="1"
-                                    Text="▼"
-                                    Command="{Binding PressDownCommand}"
-                                    Style="{StaticResource GlassDPadButton}" />
-                        </Grid>
-
-                        <!-- Volume Strip (right edge) -->
-                        <Frame Grid.Column="1"
-                               Style="{StaticResource VolumePillFrame}"
-                               IsVisible="{Binding SupportsVolume}"
-                               VerticalOptions="Center">
-                            <VerticalStackLayout Spacing="4">
-                                <Button Text="+"
-                                        Command="{Binding VolumeUpCommand}"
-                                        Style="{StaticResource GlassVolumeButton}" />
-                                <Button Text="🔇"
-                                        Command="{Binding VolumeMuteCommand}"
-                                        Style="{StaticResource GlassVolumeButton}"
-                                        FontSize="14" />
-                                <Button Text="−"
-                                        Command="{Binding VolumeDownCommand}"
-                                        Style="{StaticResource GlassVolumeButton}" />
-                            </VerticalStackLayout>
-                        </Frame>
-                    </Grid>
-
-                    <!-- Playback Controls -->
-                    <HorizontalStackLayout Spacing="20" HorizontalOptions="Center">
-                        <Button Text="⏪"
-                                Command="{Binding PressRewindCommand}"
-                                Style="{StaticResource GlassPlaybackButton}" />
-                        <Button Text="▶❚❚"
-                                Command="{Binding PressPlayCommand}"
-                                Style="{StaticResource GlassPlaybackButton}"
-                                BackgroundColor="{StaticResource Primary}"
-                                TextColor="White"
-                                WidthRequest="64"
-                                FontSize="14" />
-                        <Button Text="⏩"
-                                Command="{Binding PressFastForwardCommand}"
-                                Style="{StaticResource GlassPlaybackButton}" />
-                    </HorizontalStackLayout>
-
-                    <!-- Action Row: Home, Back, Star, Search -->
-                    <HorizontalStackLayout Spacing="16" HorizontalOptions="Center">
-                        <Button Text="🏠"
-                                Command="{Binding PressHomeCommand}"
-                                Style="{StaticResource GlassActionButton}" />
-                        <Button Text="←"
-                                Command="{Binding PressBackCommand}"
-                                Style="{StaticResource GlassActionButton}"
-                                FontSize="22" />
-                        <Button Text="★"
-                                Command="{Binding PressInfoCommand}"
-                                Style="{StaticResource GlassActionButton}" />
-                        <Button Text="🔍"
-                                Command="{Binding PressSearchCommand}"
-                                Style="{StaticResource GlassActionButton}" />
-                    </HorizontalStackLayout>
-
-                    <!-- Utility Row -->
-                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
-                        <Button Grid.Column="0"
-                                Text="↺ Replay"
-                                Command="{Binding PressReplayCommand}"
-                                Style="{StaticResource GlassUtilityButton}" />
-                        <Button Grid.Column="1"
-                                Text="⌨ Keyboard"
-                                Command="{Binding ShowKeyboardCommand}"
-                                Style="{StaticResource GlassUtilityButton}" />
-                    </Grid>
-
-                </VerticalStackLayout>
-            </Frame>
+            <!-- Placeholder for symmetry -->
+            <BoxView Grid.Column="2" WidthRequest="44" HeightRequest="44" Color="Transparent" />
         </Grid>
 
+        <!-- Main Remote Controls -->
+        <Grid Grid.Row="1" RowDefinitions="*,Auto,*" ColumnDefinitions="Auto,*,Auto">
+
+            <!-- Volume Down (left side) -->
+            <Button Grid.Row="1" Grid.Column="0"
+                    Text="−"
+                    Command="{Binding VolumeDownCommand}"
+                    Style="{StaticResource GlassDPadButton}"
+                    WidthRequest="50"
+                    HeightRequest="50"
+                    Margin="0,0,20,0" />
+
+            <!-- D-Pad (center) -->
+            <Grid Grid.Row="1" Grid.Column="1"
+                  RowDefinitions="70,90,70"
+                  ColumnDefinitions="70,90,70"
+                  RowSpacing="8"
+                  ColumnSpacing="8"
+                  HorizontalOptions="Center"
+                  VerticalOptions="Center">
+
+                <!-- Up -->
+                <Button Grid.Row="0" Grid.Column="1"
+                        Text="▲"
+                        Command="{Binding PressUpCommand}"
+                        Style="{StaticResource GlassDPadButton}" />
+
+                <!-- Left -->
+                <Button Grid.Row="1" Grid.Column="0"
+                        Text="◀"
+                        Command="{Binding PressLeftCommand}"
+                        Style="{StaticResource GlassDPadButton}" />
+
+                <!-- OK/Select -->
+                <Button Grid.Row="1" Grid.Column="1"
+                        Text="OK"
+                        Command="{Binding PressSelectCommand}"
+                        Style="{StaticResource GlassDPadCenterButton}" />
+
+                <!-- Right -->
+                <Button Grid.Row="1" Grid.Column="2"
+                        Text="▶"
+                        Command="{Binding PressRightCommand}"
+                        Style="{StaticResource GlassDPadButton}" />
+
+                <!-- Down -->
+                <Button Grid.Row="2" Grid.Column="1"
+                        Text="▼"
+                        Command="{Binding PressDownCommand}"
+                        Style="{StaticResource GlassDPadButton}" />
+            </Grid>
+
+            <!-- Volume Up (right side) -->
+            <Button Grid.Row="1" Grid.Column="2"
+                    Text="+"
+                    Command="{Binding VolumeUpCommand}"
+                    Style="{StaticResource GlassDPadButton}"
+                    WidthRequest="50"
+                    HeightRequest="50"
+                    Margin="20,0,0,0" />
+
+            <!-- Mute button (below volume down) -->
+            <Button Grid.Row="2" Grid.Column="0"
+                    Text="🔇"
+                    Command="{Binding VolumeMuteCommand}"
+                    Style="{StaticResource GlassActionButton}"
+                    VerticalOptions="Start"
+                    Margin="0,20,20,0" />
+        </Grid>
+
+        <!-- Bottom Controls -->
+        <VerticalStackLayout Grid.Row="2" Spacing="16">
+            <!-- Playback Controls -->
+            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="12">
+                <Button Grid.Column="0"
+                        Text="⏪"
+                        Command="{Binding PressRewindCommand}"
+                        Style="{StaticResource GlassPlaybackButton}"
+                        HorizontalOptions="Fill"
+                        HeightRequest="50" />
+                <Button Grid.Column="1"
+                        Text="▶❚❚"
+                        Command="{Binding PressPlayCommand}"
+                        Style="{StaticResource GlassPlaybackButton}"
+                        BackgroundColor="{StaticResource Primary}"
+                        TextColor="White"
+                        HorizontalOptions="Fill"
+                        HeightRequest="50" />
+                <Button Grid.Column="2"
+                        Text="⏩"
+                        Command="{Binding PressFastForwardCommand}"
+                        Style="{StaticResource GlassPlaybackButton}"
+                        HorizontalOptions="Fill"
+                        HeightRequest="50" />
+            </Grid>
+
+            <!-- Action Row: Home, Back, Star, Search -->
+            <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="12">
+                <Button Grid.Column="0"
+                        Text="🏠"
+                        Command="{Binding PressHomeCommand}"
+                        Style="{StaticResource GlassActionButton}"
+                        HorizontalOptions="Fill"
+                        HeightRequest="50" />
+                <Button Grid.Column="1"
+                        Text="←"
+                        Command="{Binding PressBackCommand}"
+                        Style="{StaticResource GlassActionButton}"
+                        HorizontalOptions="Fill"
+                        HeightRequest="50"
+                        FontSize="22" />
+                <Button Grid.Column="2"
+                        Text="★"
+                        Command="{Binding PressInfoCommand}"
+                        Style="{StaticResource GlassActionButton}"
+                        HorizontalOptions="Fill"
+                        HeightRequest="50" />
+                <Button Grid.Column="3"
+                        Text="🔍"
+                        Command="{Binding PressSearchCommand}"
+                        Style="{StaticResource GlassActionButton}"
+                        HorizontalOptions="Fill"
+                        HeightRequest="50" />
+            </Grid>
+
+            <!-- Utility Row -->
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                <Button Grid.Column="0"
+                        Text="↺ Replay"
+                        Command="{Binding PressReplayCommand}"
+                        Style="{StaticResource GlassUtilityButton}"
+                        HorizontalOptions="Fill"
+                        HeightRequest="44" />
+                <Button Grid.Column="1"
+                        Text="⌨ Keyboard"
+                        Command="{Binding ShowKeyboardCommand}"
+                        Style="{StaticResource GlassUtilityButton}"
+                        HorizontalOptions="Fill"
+                        HeightRequest="44" />
+            </Grid>
+        </VerticalStackLayout>
+
         <!-- Keyboard Overlay -->
-        <Grid Grid.RowSpan="2"
+        <Grid Grid.RowSpan="3"
               IsVisible="{Binding IsKeyboardVisible}"
               BackgroundColor="{AppThemeBinding Light=#80FFFFFF, Dark=#80000000}">
             <Frame Style="{StaticResource GlassCard}"

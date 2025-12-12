@@ -12,6 +12,7 @@ public partial class RemoteViewModel : BaseViewModel
 {
     private readonly IRokuControlService _controlService;
     private readonly IDeviceStorageService _storageService;
+    private readonly IWakeOnLanService _wakeOnLanService;
 
     [ObservableProperty]
     private RokuDevice? _currentDevice;
@@ -30,10 +31,12 @@ public partial class RemoteViewModel : BaseViewModel
 
     public RemoteViewModel(
         IRokuControlService controlService,
-        IDeviceStorageService storageService)
+        IDeviceStorageService storageService,
+        IWakeOnLanService wakeOnLanService)
     {
         _controlService = controlService;
         _storageService = storageService;
+        _wakeOnLanService = wakeOnLanService;
 
         Title = "Remote";
 
@@ -117,7 +120,30 @@ public partial class RemoteViewModel : BaseViewModel
 
     // Power Commands
     [RelayCommand]
-    private async Task PowerToggleAsync() => await SendKeyWithHapticAsync(RokuKey.Power);
+    private async Task PowerToggleAsync()
+    {
+        if (CurrentDevice == null)
+        {
+            SetError("No device connected");
+            return;
+        }
+
+        TriggerHaptic();
+        ClearError();
+
+        // Send Wake-on-LAN if we have a MAC address (works even when TV is fully off)
+        if (!string.IsNullOrEmpty(CurrentDevice.WifiMacAddress))
+        {
+            System.Diagnostics.Debug.WriteLine($"[Power] Sending WoL to {CurrentDevice.WifiMacAddress}");
+            await _wakeOnLanService.WakeAsync(CurrentDevice.WifiMacAddress);
+        }
+
+        // Just send the Power command - don't check result or show errors
+        // Many Roku TVs return 403 but still toggle power via CEC
+        _ = _controlService.SendKeyPressAsync(RokuKey.Power);
+
+        System.Diagnostics.Debug.WriteLine("[Power] Power command sent");
+    }
 
     [RelayCommand]
     private async Task PowerOffAsync() => await SendKeyWithHapticAsync(RokuKey.PowerOff);

@@ -216,6 +216,8 @@ public partial class RokuDiscoveryService : IRokuDiscoveryService
             device.SupportsTvPowerControl = GetXmlBool(root, "supports-tv-power-control");
             device.SupportsAudioVolumeControl = GetXmlBool(root, "supports-audio-volume-control");
             device.SupportsFindRemote = GetXmlBool(root, "supports-find-remote");
+            device.SupportsWakeOnWlan = GetXmlBool(root, "supports-wake-on-wlan");
+            device.WifiMacAddress = GetXmlValue(root, "wifi-mac");
 
             device.LastSeen = DateTime.UtcNow;
 
