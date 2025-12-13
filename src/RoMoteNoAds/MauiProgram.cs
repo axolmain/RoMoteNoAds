@@ -45,6 +45,7 @@ public static class MauiProgram
         // Register Views
         builder.Services.AddSingleton<DeviceSelectionPage>();
         builder.Services.AddSingleton<RemotePage>();
+        builder.Services.AddSingleton<NeumorphicRemotePage>();
         builder.Services.AddSingleton<ChannelsPage>();
         builder.Services.AddSingleton<ShortcutsPage>();
         builder.Services.AddSingleton<MainPage>();
