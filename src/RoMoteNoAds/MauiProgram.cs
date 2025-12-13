@@ -47,6 +47,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<RemotePage>();
         builder.Services.AddSingleton<ChannelsPage>();
         builder.Services.AddSingleton<ShortcutsPage>();
+        builder.Services.AddSingleton<MainPage>();
 
 #if DEBUG
         builder.Logging.AddDebug();
