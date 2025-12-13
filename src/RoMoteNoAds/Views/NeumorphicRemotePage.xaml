@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:RoMoteNoAds.ViewModels"
+             xmlns:controls="clr-namespace:RoMoteNoAds.Controls"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+             x:Class="RoMoteNoAds.Views.NeumorphicRemotePage"
+             x:DataType="vm:RemoteViewModel"
+             Title="Remote"
+             BackgroundColor="{AppThemeBinding Light={StaticResource NeuBackgroundLight}, Dark={StaticResource NeuBackgroundDark}}">
+
+    <ScrollView>
+        <VerticalStackLayout Spacing="24"
+                              Padding="{OnIdiom Phone='16', Default='24'}"
+                              MaximumWidthRequest="{OnIdiom Phone=500, Default=450}"
+                              HorizontalOptions="Center">
+
+            <!-- Header: Device Picker + Power -->
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
+                <controls:NeumorphicDevicePicker Grid.Column="0"
+                                                  CurrentDevice="{Binding CurrentDevice}"
+                                                  Devices="{Binding SavedDevices}"
+                                                  IsConnected="{Binding IsConnected}"
+                                                  SelectDeviceCommand="{Binding SelectDeviceCommand}"
+                                                  ScanCommand="{Binding ScanDevicesCommand}" />
+
+                <controls:NeumorphicButton Grid.Column="1"
+                                            Text="⏻"
+                                            Command="{Binding PowerToggleCommand}"
+                                            TextColor="{AppThemeBinding Light={StaticResource NeuPowerLight}, Dark={StaticResource NeuPowerDark}}"
+                                            WidthRequest="48"
+                                            HeightRequest="48"
+                                            IsCircular="True" />
+            </Grid>
+
+            <!-- D-Pad -->
+            <controls:NeumorphicDPad WidthRequest="260"
+                                      HeightRequest="260"
+                                      HorizontalOptions="Center"
+                                      UpCommand="{Binding PressUpCommand}"
+                                      DownCommand="{Binding PressDownCommand}"
+                                      LeftCommand="{Binding PressLeftCommand}"
+                                      RightCommand="{Binding PressRightCommand}"
+                                      SelectCommand="{Binding PressSelectCommand}" />
+
+            <!-- Media Controls Panel -->
+            <controls:NeumorphicPanel CornerRadius="24"
+                                       PaddingInset="20"
+                                       HeightRequest="140">
+                <VerticalStackLayout Spacing="16">
+                    <!-- Playback Row -->
+                    <HorizontalStackLayout Spacing="16" HorizontalOptions="Center">
+                        <controls:NeumorphicButton Text="◀◀"
+                                                    Command="{Binding PressRewindCommand}"
+                                                    WidthRequest="48"
+                                                    HeightRequest="48"
+                                                    FontSize="16" />
+
+                        <controls:NeumorphicButton Text="▶"
+                                                    Command="{Binding PressPlayCommand}"
+                                                    WidthRequest="56"
+                                                    HeightRequest="56"
+                                                    FontSize="20"
+                                                    IsPressedStyle="True"
+                                                    TextColor="{AppThemeBinding Light={StaticResource NeuAccentLight}, Dark={StaticResource NeuAccentDark}}" />
+
+                        <controls:NeumorphicButton Text="▶▶"
+                                                    Command="{Binding PressFastForwardCommand}"
+                                                    WidthRequest="48"
+                                                    HeightRequest="48"
+                                                    FontSize="16" />
+                    </HorizontalStackLayout>
+
+                    <!-- Volume Slider -->
+                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                        <Label Grid.Column="0"
+                               Text="🔈"
+                               FontSize="16"
+                               VerticalOptions="Center"
+                               TextColor="{AppThemeBinding Light={StaticResource NeuTextSecondaryLight}, Dark={StaticResource NeuTextSecondaryDark}}" />
+
+                        <controls:NeumorphicSlider Grid.Column="1"
+                                                    Value="0.5"
+                                                    Minimum="0"
+                                                    Maximum="1" />
+
+                        <Label Grid.Column="2"
+                               Text="🔊"
+                               FontSize="16"
+                               VerticalOptions="Center"
+                               TextColor="{AppThemeBinding Light={StaticResource NeuTextSecondaryLight}, Dark={StaticResource NeuTextSecondaryDark}}" />
+                    </Grid>
+                </VerticalStackLayout>
+            </controls:NeumorphicPanel>
+
+            <!-- Navigation Buttons -->
+            <HorizontalStackLayout Spacing="24" HorizontalOptions="Center">
+                <VerticalStackLayout Spacing="8" HorizontalOptions="Center">
+                    <controls:NeumorphicButton Text="←"
+                                                Command="{Binding PressBackCommand}"
+                                                WidthRequest="64"
+                                                HeightRequest="64"
+                                                FontSize="24" />
+                    <Label Text="BACK"
+                           FontSize="10"
+                           FontAttributes="Bold"
+                           HorizontalOptions="Center"
+                           TextColor="{AppThemeBinding Light={StaticResource NeuTextSecondaryLight}, Dark={StaticResource NeuTextSecondaryDark}}" />
+                </VerticalStackLayout>
+
+                <VerticalStackLayout Spacing="8" HorizontalOptions="Center">
+                    <controls:NeumorphicButton Text="⌂"
+                                                Command="{Binding PressHomeCommand}"
+                                                WidthRequest="64"
+                                                HeightRequest="64"
+                                                FontSize="24" />
+                    <Label Text="HOME"
+                           FontSize="10"
+                           FontAttributes="Bold"
+                           HorizontalOptions="Center"
+                           TextColor="{AppThemeBinding Light={StaticResource NeuTextSecondaryLight}, Dark={StaticResource NeuTextSecondaryDark}}" />
+                </VerticalStackLayout>
+
+                <VerticalStackLayout Spacing="8" HorizontalOptions="Center">
+                    <controls:NeumorphicButton Text="★"
+                                                Command="{Binding PressInfoCommand}"
+                                                WidthRequest="64"
+                                                HeightRequest="64"
+                                                FontSize="24" />
+                    <Label Text="OPTIONS"
+                           FontSize="10"
+                           FontAttributes="Bold"
+                           HorizontalOptions="Center"
+                           TextColor="{AppThemeBinding Light={StaticResource NeuTextSecondaryLight}, Dark={StaticResource NeuTextSecondaryDark}}" />
+                </VerticalStackLayout>
+            </HorizontalStackLayout>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
