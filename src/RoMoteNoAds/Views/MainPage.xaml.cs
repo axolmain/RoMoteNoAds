@@ -82,8 +82,8 @@ public partial class MainPage : ContentPage
         ContentPage? newPage = tabId switch
         {
             "remote" => _serviceProvider.GetService<NeumorphicRemotePage>(),
-            "channels" => _serviceProvider.GetService<ChannelsPage>(),
-            "shortcuts" => _serviceProvider.GetService<ShortcutsPage>(),
+            "channels" => _serviceProvider.GetService<NeumorphicChannelsPage>(),
+            "shortcuts" => _serviceProvider.GetService<NeumorphicShortcutsPage>(),
             _ => null
         };
 

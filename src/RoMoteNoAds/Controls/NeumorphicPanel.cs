@@ -1,7 +1,6 @@
 using SkiaSharp;
 using SkiaSharp.Views.Maui;
 using SkiaSharp.Views.Maui.Controls;
-using Microsoft.Maui.Layouts;
 
 namespace RoMoteNoAds.Controls;
 
@@ -9,21 +8,18 @@ namespace RoMoteNoAds.Controls;
 /// A neomorphic panel with inset (recessed) shadow effect.
 /// Used for grouping controls like media buttons.
 /// </summary>
-public class NeumorphicPanel : SKCanvasView, ILayoutManager
+[ContentProperty(nameof(Content))]
+public class NeumorphicPanel : ContentView
 {
-    private View? _content;
+    private readonly SKCanvasView _canvasView;
 
     public static readonly BindableProperty CornerRadiusProperty = BindableProperty.Create(
         nameof(CornerRadius), typeof(float), typeof(NeumorphicPanel), 24f,
-        propertyChanged: (b, _, _) => ((NeumorphicPanel)b).InvalidateSurface());
+        propertyChanged: (b, _, _) => ((NeumorphicPanel)b)._canvasView.InvalidateSurface());
 
     public static readonly BindableProperty PaddingInsetProperty = BindableProperty.Create(
         nameof(PaddingInset), typeof(Thickness), typeof(NeumorphicPanel), new Thickness(20),
-        propertyChanged: (b, _, _) => ((NeumorphicPanel)b).InvalidateMeasure());
-
-    public static readonly BindableProperty ContentProperty = BindableProperty.Create(
-        nameof(Content), typeof(View), typeof(NeumorphicPanel), null,
-        propertyChanged: OnContentChanged);
+        propertyChanged: OnPaddingInsetChanged);
 
     public float CornerRadius
     {
@@ -37,25 +33,46 @@ public class NeumorphicPanel : SKCanvasView, ILayoutManager
         set => SetValue(PaddingInsetProperty, value);
     }
 
-    public View? Content
-    {
-        get => (View?)GetValue(ContentProperty);
-        set => SetValue(ContentProperty, value);
-    }
-
     public NeumorphicPanel()
     {
+        _canvasView = new SKCanvasView();
+        _canvasView.PaintSurface += OnPaintSurface;
+
+        // Use a Grid to layer the canvas behind the content
+        var grid = new Grid();
+        grid.Children.Add(_canvasView);
+
+        // ContentPresenter will be added when Content is set
+        base.Content = grid;
+        Padding = PaddingInset;
     }
 
-    private static void OnContentChanged(BindableObject bindable, object oldValue, object newValue)
+    private static void OnPaddingInsetChanged(BindableObject bindable, object oldValue, object newValue)
     {
         var panel = (NeumorphicPanel)bindable;
-        panel._content = newValue as View;
-        panel.InvalidateSurface();
-        panel.InvalidateMeasure();
+        panel.Padding = (Thickness)newValue;
     }
 
-    protected override void OnPaintSurface(SKPaintSurfaceEventArgs e)
+    // Shadow the base Content property to add to our grid
+    public new View? Content
+    {
+        get => _contentView;
+        set
+        {
+            if (_contentView != null && base.Content is Grid grid)
+            {
+                grid.Children.Remove(_contentView);
+            }
+            _contentView = value;
+            if (_contentView != null && base.Content is Grid g)
+            {
+                g.Children.Add(_contentView);
+            }
+        }
+    }
+    private View? _contentView;
+
+    private void OnPaintSurface(object? sender, SKPaintSurfaceEventArgs e)
     {
         var canvas = e.Surface.Canvas;
         var info = e.Info;
@@ -119,35 +136,5 @@ public class NeumorphicPanel : SKCanvasView, ILayoutManager
         canvas.DrawRoundRect(lightRect, cornerRadius, cornerRadius, lightPaint);
 
         canvas.Restore();
-    }
-
-    public new Size Measure(double widthConstraint, double heightConstraint)
-    {
-        if (_content == null)
-            return new Size(widthConstraint, heightConstraint);
-
-        var contentSize = _content.Measure(
-            widthConstraint - PaddingInset.HorizontalThickness,
-            heightConstraint - PaddingInset.VerticalThickness);
-
-        return new Size(
-            contentSize.Width + PaddingInset.HorizontalThickness,
-            contentSize.Height + PaddingInset.VerticalThickness);
-    }
-
-    public Size ArrangeChildren(Rect bounds)
-    {
-        if (_content != null)
-        {
-            var contentBounds = new Rect(
-                PaddingInset.Left,
-                PaddingInset.Top,
-                bounds.Width - PaddingInset.HorizontalThickness,
-                bounds.Height - PaddingInset.VerticalThickness);
-
-            _content.Arrange(contentBounds);
-        }
-
-        return bounds.Size;
     }
 }

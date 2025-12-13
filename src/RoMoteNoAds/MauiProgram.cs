@@ -47,7 +47,9 @@ public static class MauiProgram
         builder.Services.AddSingleton<RemotePage>();
         builder.Services.AddSingleton<NeumorphicRemotePage>();
         builder.Services.AddSingleton<ChannelsPage>();
+        builder.Services.AddSingleton<NeumorphicChannelsPage>();
         builder.Services.AddSingleton<ShortcutsPage>();
+        builder.Services.AddSingleton<NeumorphicShortcutsPage>();
         builder.Services.AddSingleton<MainPage>();
 
 #if DEBUG

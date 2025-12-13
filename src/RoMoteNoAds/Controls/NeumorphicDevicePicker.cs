@@ -2,17 +2,55 @@ using SkiaSharp;
 using SkiaSharp.Views.Maui;
 using SkiaSharp.Views.Maui.Controls;
 using RoMote.Roku.Models;
+using System.Windows.Input;
 
 namespace RoMoteNoAds.Controls;
 
-/// <summary>
-/// A neomorphic device picker that shows current device with dropdown.
-/// </summary>
 public class NeumorphicDevicePicker : SKCanvasView
 {
     private bool _isExpanded;
+    private float _animationProgress; // 0.0f (Closed) to 1.0f (Open)
 
-    #region Bindable Properties
+    // Layout Constants
+    private const float HEADER_HEIGHT = 60f;
+    private const float ITEM_HEIGHT = 56f;
+
+    #region Color & Style Properties
+
+    // Default to Cupertino/Neo Light Palette
+    public static readonly BindableProperty BaseColorProperty = BindableProperty.Create(
+        nameof(BaseColor), typeof(Color), typeof(NeumorphicDevicePicker), Color.FromArgb("#E0E5EC"),
+        propertyChanged: (b, _, _) => ((NeumorphicDevicePicker)b).InvalidateSurface());
+
+    public static readonly BindableProperty AccentColorProperty = BindableProperty.Create(
+        nameof(AccentColor), typeof(Color), typeof(NeumorphicDevicePicker), Color.FromArgb("#007AFF"),
+        propertyChanged: (b, _, _) => ((NeumorphicDevicePicker)b).InvalidateSurface());
+
+    public static readonly BindableProperty TextColorProperty = BindableProperty.Create(
+        nameof(TextColor), typeof(Color), typeof(NeumorphicDevicePicker), Color.FromArgb("#4B5563"),
+        propertyChanged: (b, _, _) => ((NeumorphicDevicePicker)b).InvalidateSurface());
+
+    public Color BaseColor
+    {
+        get => (Color)GetValue(BaseColorProperty);
+        set => SetValue(BaseColorProperty, value);
+    }
+
+    public Color AccentColor
+    {
+        get => (Color)GetValue(AccentColorProperty);
+        set => SetValue(AccentColorProperty, value);
+    }
+
+    public Color TextColor
+    {
+        get => (Color)GetValue(TextColorProperty);
+        set => SetValue(TextColorProperty, value);
+    }
+
+    #endregion
+
+    #region Data Bindings
 
     public static readonly BindableProperty CurrentDeviceProperty = BindableProperty.Create(
         nameof(CurrentDevice), typeof(RokuDevice), typeof(NeumorphicDevicePicker), null,
@@ -27,10 +65,10 @@ public class NeumorphicDevicePicker : SKCanvasView
         propertyChanged: (b, _, _) => ((NeumorphicDevicePicker)b).InvalidateSurface());
 
     public static readonly BindableProperty SelectDeviceCommandProperty = BindableProperty.Create(
-        nameof(SelectDeviceCommand), typeof(System.Windows.Input.ICommand), typeof(NeumorphicDevicePicker), null);
+        nameof(SelectDeviceCommand), typeof(ICommand), typeof(NeumorphicDevicePicker), null);
 
     public static readonly BindableProperty ScanCommandProperty = BindableProperty.Create(
-        nameof(ScanCommand), typeof(System.Windows.Input.ICommand), typeof(NeumorphicDevicePicker), null);
+        nameof(ScanCommand), typeof(ICommand), typeof(NeumorphicDevicePicker), null);
 
     public RokuDevice? CurrentDevice
     {
@@ -50,15 +88,15 @@ public class NeumorphicDevicePicker : SKCanvasView
         set => SetValue(IsConnectedProperty, value);
     }
 
-    public System.Windows.Input.ICommand? SelectDeviceCommand
+    public ICommand? SelectDeviceCommand
     {
-        get => (System.Windows.Input.ICommand?)GetValue(SelectDeviceCommandProperty);
+        get => (ICommand?)GetValue(SelectDeviceCommandProperty);
         set => SetValue(SelectDeviceCommandProperty, value);
     }
 
-    public System.Windows.Input.ICommand? ScanCommand
+    public ICommand? ScanCommand
     {
-        get => (System.Windows.Input.ICommand?)GetValue(ScanCommandProperty);
+        get => (ICommand?)GetValue(ScanCommandProperty);
         set => SetValue(ScanCommandProperty, value);
     }
 
@@ -71,14 +109,14 @@ public class NeumorphicDevicePicker : SKCanvasView
     {
         EnableTouchEvents = true;
         Touch += OnTouch;
-        HeightRequest = 44;
+        HeightRequest = HEADER_HEIGHT; 
+        BackgroundColor = Colors.Transparent;
     }
 
     public void ToggleExpanded()
     {
         _isExpanded = !_isExpanded;
-        UpdateHeight();
-        InvalidateSurface();
+        AnimateState();
     }
 
     public void Collapse()
@@ -86,56 +124,73 @@ public class NeumorphicDevicePicker : SKCanvasView
         if (_isExpanded)
         {
             _isExpanded = false;
-            UpdateHeight();
-            InvalidateSurface();
+            AnimateState();
         }
     }
 
-    private void UpdateHeight()
+    private void AnimateState()
     {
-        var scale = DeviceDisplay.MainDisplayInfo.Density;
-        var baseHeight = 44 * scale;
-        var itemHeight = 56 * scale;
+        this.AbortAnimation("ExpandAnim");
+
+        // Use HeightRequest to control the view size.
+        // In an Overlay Grid, increasing HeightRequest allows it to draw over lower layers.
+        var baseHeight = HEADER_HEIGHT;
         var deviceCount = Devices?.Count ?? 0;
         var extraItems = 1; // Scan button
+        
+        // Calculate max needed height
+        var contentHeight = baseHeight + ((deviceCount + extraItems) * ITEM_HEIGHT) + 16;
+        var targetHeight = _isExpanded ? contentHeight : baseHeight;
 
-        HeightRequest = _isExpanded
-            ? baseHeight + ((deviceCount + extraItems) * itemHeight) + (16 * scale)
-            : baseHeight;
+        var anim = new Animation(v =>
+        {
+            HeightRequest = v;
+            
+            // Calculate progress (0 to 1) for arrow rotation and shadow transitions
+            var progress = (v - baseHeight) / (contentHeight - baseHeight);
+            _animationProgress = (float)Math.Clamp(progress, 0, 1);
+            if (_isExpanded && Math.Abs(v - targetHeight) < 0.1) _animationProgress = 1;
+            if (!_isExpanded && Math.Abs(v - targetHeight) < 0.1) _animationProgress = 0;
+
+            InvalidateSurface();
+        }, HeightRequest, targetHeight, Easing.CubicOut); // Springy feel
+
+        anim.Commit(this, "ExpandAnim", 16, 300);
     }
 
     private void OnTouch(object? sender, SKTouchEventArgs e)
     {
         var scale = (float)DeviceDisplay.MainDisplayInfo.Density;
-        var headerHeight = 44f * scale;
-
+        var headerHeightPixels = HEADER_HEIGHT * scale;
+        
         if (e.ActionType == SKTouchAction.Released)
         {
-            if (e.Location.Y <= headerHeight)
+            if (e.Location.Y <= headerHeightPixels)
             {
-                // Tapped header - toggle dropdown
                 ToggleExpanded();
             }
             else if (_isExpanded)
             {
-                // Tapped in dropdown area
-                var itemHeight = 56f * scale;
-                var dropdownY = e.Location.Y - headerHeight - (8f * scale);
-                var tappedIndex = (int)(dropdownY / itemHeight);
-                var deviceCount = Devices?.Count ?? 0;
+                var itemHeightPixels = ITEM_HEIGHT * scale;
+                var dropdownRelativeY = e.Location.Y - headerHeightPixels - (8f * scale);
+                
+                if (dropdownRelativeY >= 0)
+                {
+                    var tappedIndex = (int)(dropdownRelativeY / itemHeightPixels);
+                    var deviceCount = Devices?.Count ?? 0;
 
-                if (tappedIndex >= 0 && tappedIndex < deviceCount)
-                {
-                    var device = Devices![tappedIndex];
-                    DeviceSelected?.Invoke(this, device);
-                    SelectDeviceCommand?.Execute(device);
-                    Collapse();
-                }
-                else if (tappedIndex == deviceCount)
-                {
-                    // Scan button
-                    ScanRequested?.Invoke(this, EventArgs.Empty);
-                    ScanCommand?.Execute(null);
+                    if (tappedIndex >= 0 && tappedIndex < deviceCount)
+                    {
+                        var device = Devices![tappedIndex];
+                        DeviceSelected?.Invoke(this, device);
+                        SelectDeviceCommand?.Execute(device);
+                        Collapse();
+                    }
+                    else if (tappedIndex == deviceCount)
+                    {
+                        ScanRequested?.Invoke(this, EventArgs.Empty);
+                        ScanCommand?.Execute(null);
+                    }
                 }
             }
             e.Handled = true;
@@ -153,207 +208,209 @@ public class NeumorphicDevicePicker : SKCanvasView
         canvas.Clear(SKColors.Transparent);
 
         var scale = (float)DeviceDisplay.MainDisplayInfo.Density;
-        var headerHeight = 44f * scale;
+        
+        // Convert Colors
+        var skBase = BaseColor.ToSKColor();
+        var skAccent = AccentColor.ToSKColor();
+        var skText = TextColor.ToSKColor();
+        var skTextSec = skText.WithAlpha(150);
+        
+        // Shadow Colors
+        var shadowLight = SKColors.White.WithAlpha(200);
+        var shadowDark = new SKColor(163, 177, 198, 150);
 
-        // Draw header (always visible)
-        DrawHeader(canvas, info.Width, headerHeight, scale);
-
-        // Draw dropdown if expanded
-        if (_isExpanded)
+        // Dimensions
+        var headerHeight = HEADER_HEIGHT * scale;
+        var padding = 12f * scale;
+        var width = info.Width;
+        
+        // 1. Draw Dropdown Body
+        // We only draw this if animation > 0
+        if (_animationProgress > 0.01f) 
         {
-            DrawDropdown(canvas, info.Width, headerHeight, info.Height, scale);
+            var dropdownTop = headerHeight - (10f * scale);
+            var totalDropdownHeight = info.Height - dropdownTop - padding;
+            
+            // Clip to reveal gradually if we wanted, but HeightRequest handles clipping usually.
+            // We just draw the box.
+            
+            var dropdownRect = new SKRect(padding, dropdownTop, width - padding, info.Height - padding);
+            
+            // Main Dropdown Background
+            using var bgPaint = new SKPaint { Color = skBase, IsAntialias = true, Style = SKPaintStyle.Fill };
+            canvas.DrawRoundRect(dropdownRect, 16f * scale, 16f * scale, bgPaint);
+            
+            // Soft Shadow for Dropdown (floating effect)
+            if (_isExpanded)
+            {
+                // We draw a subtle border/shadow to separate it from content below
+                using var borderPaint = new SKPaint 
+                { 
+                    Color = shadowDark.WithAlpha(50), 
+                    IsAntialias = true, 
+                    Style = SKPaintStyle.Stroke, 
+                    StrokeWidth = 1f * scale 
+                };
+                canvas.DrawRoundRect(dropdownRect, 16f * scale, 16f * scale, borderPaint);
+            }
+
+            // Draw Items
+            var startY = headerHeight + (8f * scale);
+            var itemHeightPixels = ITEM_HEIGHT * scale;
+            var devices = Devices ?? new List<RokuDevice>();
+            
+            canvas.Save();
+            canvas.ClipRoundRect(new SKRoundRect(dropdownRect, 16f * scale));
+
+            for (int i = 0; i < devices.Count; i++)
+            {
+                DrawDeviceItem(canvas, devices[i], padding, startY + (i * itemHeightPixels), 
+                             width - (padding * 2), itemHeightPixels, 
+                             devices[i] == CurrentDevice, scale, skText, skAccent);
+            }
+            
+            DrawScanButton(canvas, padding, startY + (devices.Count * itemHeightPixels), 
+                         width - (padding * 2), itemHeightPixels, scale, skAccent);
+            
+            canvas.Restore();
         }
-    }
 
-    private void DrawHeader(SKCanvas canvas, float width, float height, float scale)
-    {
-        var padding = 8f * scale;
-        var bounds = new SKRect(padding, padding, width - padding, height - padding);
-        var cornerRadius = 12f * scale;
+        // 2. Draw Header
+        var headerRect = new SKRect(padding, padding, width - padding, headerHeight - padding);
+        var cornerRadius = 16f * scale;
+        
+        // Visual State: Pressed when expanded
+        bool isPressed = _isExpanded || _animationProgress > 0.5f;
 
-        // Outset shadow
-        var offset = 4f * scale;
-        var blur = 8f * scale;
-
-        using var darkPaint = new SKPaint
+        if (isPressed)
         {
-            Color = NeomorphicColors.ShadowDark,
-            IsAntialias = true,
-            Style = SKPaintStyle.Fill,
-            MaskFilter = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, blur / 2)
-        };
-        canvas.DrawRoundRect(bounds.Left + offset, bounds.Top + offset,
-                              bounds.Width, bounds.Height,
-                              cornerRadius, cornerRadius, darkPaint);
+            // --- INSET STATE ---
+            using var bgPaint = new SKPaint { Color = skBase, IsAntialias = true };
+            canvas.DrawRoundRect(headerRect, cornerRadius, cornerRadius, bgPaint);
 
-        using var lightPaint = new SKPaint
+            // Inner Shadow
+            canvas.Save();
+            canvas.ClipRoundRect(new SKRoundRect(headerRect, cornerRadius), SKClipOperation.Intersect);
+            
+            using var innerShadowDark = new SKPaint 
+            { 
+                Color = shadowDark.WithAlpha(100), 
+                IsAntialias = true, 
+                MaskFilter = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, 6f * scale) 
+            };
+            canvas.DrawRect(new SKRect(headerRect.Left, headerRect.Top, headerRect.Right, headerRect.Top + 10 * scale), innerShadowDark);
+            canvas.DrawRect(new SKRect(headerRect.Left, headerRect.Top, headerRect.Left + 10 * scale, headerRect.Bottom), innerShadowDark);
+            canvas.Restore();
+        }
+        else
         {
-            Color = NeomorphicColors.ShadowLight,
-            IsAntialias = true,
-            Style = SKPaintStyle.Fill,
-            MaskFilter = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, blur / 2)
-        };
-        canvas.DrawRoundRect(bounds.Left - offset, bounds.Top - offset,
-                              bounds.Width, bounds.Height,
-                              cornerRadius, cornerRadius, lightPaint);
+            // --- OUTSET STATE ---
+            var offset = 5f * scale;
+            var blur = 8f * scale;
 
-        // Background
-        using var bgPaint = new SKPaint
-        {
-            Color = NeomorphicColors.Background,
-            IsAntialias = true,
-            Style = SKPaintStyle.Fill
-        };
-        canvas.DrawRoundRect(bounds, cornerRadius, cornerRadius, bgPaint);
+            using var shadowDarkPaint = new SKPaint
+            {
+                Color = shadowDark,
+                IsAntialias = true,
+                MaskFilter = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, blur)
+            };
+            canvas.DrawRoundRect(new SKRect(headerRect.Left + offset, headerRect.Top + offset, headerRect.Right + offset, headerRect.Bottom + offset), cornerRadius, cornerRadius, shadowDarkPaint);
 
-        // Status dot
-        var dotRadius = 5f * scale;
-        var dotX = bounds.Left + 16f * scale;
-        var dotY = bounds.MidY;
+            using var shadowLightPaint = new SKPaint
+            {
+                Color = shadowLight,
+                IsAntialias = true,
+                MaskFilter = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, blur)
+            };
+            canvas.DrawRoundRect(new SKRect(headerRect.Left - offset, headerRect.Top - offset, headerRect.Right - offset, headerRect.Bottom - offset), cornerRadius, cornerRadius, shadowLightPaint);
 
-        using var dotPaint = new SKPaint
-        {
-            Color = IsConnected ? NeomorphicColors.Connected : NeomorphicColors.TextSecondary,
-            IsAntialias = true,
-            Style = SKPaintStyle.Fill
+            using var bgPaint = new SKPaint { Color = skBase, IsAntialias = true };
+            canvas.DrawRoundRect(headerRect, cornerRadius, cornerRadius, bgPaint);
+        }
+
+        // 3. Header Content
+        var dotRadius = 4f * scale;
+        var dotX = headerRect.Left + 20f * scale;
+        var dotY = headerRect.MidY;
+        using var dotPaint = new SKPaint 
+        { 
+            Color = IsConnected ? SKColors.LimeGreen : skTextSec, 
+            IsAntialias = true, 
+            Style = SKPaintStyle.Fill 
         };
         canvas.DrawCircle(dotX, dotY, dotRadius, dotPaint);
 
-        // Device name - using modern SKFont API
         var deviceName = CurrentDevice?.DisplayName ?? "No Device";
-        using var textTypeface = SKTypeface.FromFamilyName("SF Pro", SKFontStyle.Bold);
-        using var textFont = new SKFont(textTypeface, 14f * scale);
-        using var textPaint = new SKPaint
-        {
-            Color = NeomorphicColors.TextPrimary,
-            IsAntialias = true
-        };
-        canvas.DrawText(deviceName, dotX + 16f * scale, bounds.MidY + 5f * scale, textFont, textPaint);
+        using var textFont = new SKFont(SKTypeface.FromFamilyName("SF Pro Display", SKFontStyle.Bold), 16f * scale);
+        using var textPaint = new SKPaint { Color = skText, IsAntialias = true };
+        
+        var textBounds = new SKRect();
+        textPaint.MeasureText(deviceName, ref textBounds);
+        canvas.DrawText(deviceName, dotX + 16f * scale, headerRect.MidY - textBounds.MidY, textFont, textPaint);
 
-        // Dropdown arrow - using modern SKFont API
-        var arrowText = _isExpanded ? "▲" : "▼";
-        using var arrowTypeface = SKTypeface.FromFamilyName("SF Pro", SKFontStyle.Normal);
-        using var arrowFont = new SKFont(arrowTypeface, 10f * scale);
-        using var arrowPaint = new SKPaint
-        {
-            Color = NeomorphicColors.TextSecondary,
-            IsAntialias = true
-        };
-        canvas.DrawText(arrowText, bounds.Right - 12f * scale, bounds.MidY + 4f * scale, SKTextAlign.Right, arrowFont, arrowPaint);
-    }
-
-    private void DrawDropdown(SKCanvas canvas, float width, float headerHeight, float totalHeight, float scale)
-    {
-        var padding = 8f * scale;
-        var dropdownTop = headerHeight + padding;
-        var bounds = new SKRect(padding, dropdownTop, width - padding, totalHeight - padding);
-        var cornerRadius = 12f * scale;
-
-        // Inset dropdown background
-        using var bgPaint = new SKPaint
-        {
-            Color = NeomorphicColors.Background,
-            IsAntialias = true,
-            Style = SKPaintStyle.Fill
-        };
-        canvas.DrawRoundRect(bounds, cornerRadius, cornerRadius, bgPaint);
-
+        // Animated Arrow
+        var arrowX = headerRect.Right - 24f * scale;
+        var arrowY = headerRect.MidY;
+        
         canvas.Save();
-        using var clipPath = new SKPath();
-        clipPath.AddRoundRect(bounds, cornerRadius, cornerRadius);
-        canvas.ClipPath(clipPath);
+        canvas.Translate(arrowX, arrowY);
+        // Rotate 180 degrees based on animation progress
+        canvas.RotateDegrees(180 * _animationProgress); 
+        
+        using var arrowPath = new SKPath();
+        var arrowSize = 5f * scale;
+        // Draw V shape centered at 0,0
+        arrowPath.MoveTo(-arrowSize, -arrowSize/2);
+        arrowPath.LineTo(0, arrowSize/2);
+        arrowPath.LineTo(arrowSize, -arrowSize/2);
 
-        using var shadowPaint = new SKPaint
-        {
-            Color = NeomorphicColors.ShadowDark.WithAlpha(100),
-            IsAntialias = true,
-            Style = SKPaintStyle.Stroke,
-            StrokeWidth = 8f * scale,
-            MaskFilter = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, 4f * scale)
+        using var arrowPaint = new SKPaint 
+        { 
+            Color = skTextSec, 
+            IsAntialias = true, 
+            Style = SKPaintStyle.Stroke, 
+            StrokeWidth = 2f * scale,
+            StrokeCap = SKStrokeCap.Round,
+            StrokeJoin = SKStrokeJoin.Round
         };
-        canvas.DrawRoundRect(bounds, cornerRadius, cornerRadius, shadowPaint);
-
+        canvas.DrawPath(arrowPath, arrowPaint);
+        
         canvas.Restore();
-
-        // Draw device items
-        var itemHeight = 56f * scale;
-        var itemY = dropdownTop + 8f * scale;
-        var devices = Devices ?? new List<RokuDevice>();
-
-        foreach (var device in devices)
-        {
-            var isSelected = device == CurrentDevice;
-            DrawDeviceItem(canvas, device, padding + 8f * scale, itemY,
-                           width - (padding * 2) - 16f * scale, itemHeight - 8f * scale,
-                           isSelected, scale);
-            itemY += itemHeight;
-        }
-
-        // Draw scan button
-        DrawScanButton(canvas, padding + 8f * scale, itemY,
-                       width - (padding * 2) - 16f * scale, itemHeight - 8f * scale, scale);
     }
 
-    private void DrawDeviceItem(SKCanvas canvas, RokuDevice device, float x, float y,
-                                 float width, float height, bool isSelected, float scale)
+    private void DrawDeviceItem(SKCanvas canvas, RokuDevice device, float x, float y, float width, float height, 
+                              bool isSelected, float scale, SKColor textColor, SKColor accentColor)
     {
-        var bounds = new SKRect(x, y, x + width, y + height);
-
+        var centerY = y + (height / 2);
+        
         if (isSelected)
         {
-            using var selectPaint = new SKPaint
-            {
-                Color = NeomorphicColors.Accent.WithAlpha(30),
-                IsAntialias = true,
-                Style = SKPaintStyle.Fill
-            };
-            canvas.DrawRoundRect(bounds, 8f * scale, 8f * scale, selectPaint);
+            var barRect = new SKRect(x + 4 * scale, y + 4 * scale, x + 4 * scale + 4 * scale, y + height - 4 * scale);
+            using var barPaint = new SKPaint { Color = accentColor, IsAntialias = true, Style = SKPaintStyle.Fill };
+            canvas.DrawRoundRect(barRect, 2 * scale, 2 * scale, barPaint);
         }
 
-        // Checkmark for selected - using modern SKFont API
-        if (isSelected)
-        {
-            using var checkTypeface = SKTypeface.FromFamilyName("SF Pro", SKFontStyle.Bold);
-            using var checkFont = new SKFont(checkTypeface, 14f * scale);
-            using var checkPaint = new SKPaint
-            {
-                Color = NeomorphicColors.Accent,
-                IsAntialias = true
-            };
-            canvas.DrawText("✓", x + 12f * scale, y + height / 2 + 5f * scale, checkFont, checkPaint);
-        }
-
-        // Device name - using modern SKFont API
-        using var nameTypeface = SKTypeface.FromFamilyName("SF Pro", isSelected ? SKFontStyle.Bold : SKFontStyle.Normal);
-        using var nameFont = new SKFont(nameTypeface, 14f * scale);
-        using var namePaint = new SKPaint
-        {
-            Color = NeomorphicColors.TextPrimary,
-            IsAntialias = true
-        };
-        canvas.DrawText(device.DisplayName, x + 36f * scale, y + height / 2 - 2f * scale, nameFont, namePaint);
-
-        // IP address - using modern SKFont API
-        using var ipTypeface = SKTypeface.FromFamilyName("SF Pro", SKFontStyle.Normal);
-        using var ipFont = new SKFont(ipTypeface, 11f * scale);
-        using var ipPaint = new SKPaint
-        {
-            Color = NeomorphicColors.TextSecondary,
-            IsAntialias = true
-        };
-        canvas.DrawText(device.IpAddress, x + 36f * scale, y + height / 2 + 14f * scale, ipFont, ipPaint);
+        using var nameFont = new SKFont(SKTypeface.FromFamilyName("SF Pro Text", SKFontStyle.Normal), 15f * scale);
+        using var namePaint = new SKPaint { Color = isSelected ? accentColor : textColor, IsAntialias = true };
+        
+        var textBounds = new SKRect();
+        namePaint.MeasureText(device.DisplayName, ref textBounds);
+        canvas.DrawText(device.DisplayName, x + 20f * scale, centerY - textBounds.MidY - 6 * scale, nameFont, namePaint);
+        
+        using var ipFont = new SKFont(SKTypeface.FromFamilyName("SF Pro Text", SKFontStyle.Normal), 12f * scale);
+        using var ipPaint = new SKPaint { Color = textColor.WithAlpha(128), IsAntialias = true };
+        canvas.DrawText(device.IpAddress, x + 20f * scale, centerY + 10f * scale, ipFont, ipPaint);
     }
 
-    private void DrawScanButton(SKCanvas canvas, float x, float y, float width, float height, float scale)
+    private void DrawScanButton(SKCanvas canvas, float x, float y, float width, float height, float scale, SKColor accentColor)
     {
-        // Scan button text - using modern SKFont API
-        using var textTypeface = SKTypeface.FromFamilyName("SF Pro", SKFontStyle.Bold);
-        using var textFont = new SKFont(textTypeface, 14f * scale);
-        using var textPaint = new SKPaint
-        {
-            Color = NeomorphicColors.Accent,
-            IsAntialias = true
-        };
-        canvas.DrawText("⟳ Scan for devices...", x + 12f * scale, y + height / 2 + 5f * scale, textFont, textPaint);
+        var centerY = y + (height / 2);
+        using var font = new SKFont(SKTypeface.FromFamilyName("SF Pro Text", SKFontStyle.Bold), 14f * scale);
+        using var paint = new SKPaint { Color = accentColor, IsAntialias = true };
+        
+        var text = "Scan for devices...";
+        var bounds = new SKRect();
+        paint.MeasureText(text, ref bounds);
+        canvas.DrawText(text, x + (width / 2) - (bounds.Width / 2), centerY - bounds.MidY, font, paint);
     }
 }

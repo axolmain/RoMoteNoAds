@@ -22,6 +22,10 @@
     <!-- iOS/Mac Catalyst -->
     <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">15.0</SupportedOSPlatformVersion>
     <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">15.0</SupportedOSPlatformVersion>
+
+    <!-- Code Signing - reads from environment or local props file -->
+    <CodesignKey Condition="'$(CodesignKey)' == ''">$(CODESIGN_KEY)</CodesignKey>
+    <EnableCodeSigning>true</EnableCodeSigning>
   </PropertyGroup>
 
   <ItemGroup>
@@ -47,6 +51,7 @@
     <PackageReference Include="Microsoft.Maui.Controls" Version="10.0.11" />
     <PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="10.0.11" />
     <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.1" />
+    <PackageReference Include="Microsoft.Maui.Controls.Core" Version="10.0.11" />
     <PackageReference Include="SkiaSharp.Views.Maui.Controls" Version="3.119.0" />
   </ItemGroup>
 
