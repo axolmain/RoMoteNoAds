@@ -4,6 +4,7 @@ using RoMote.Roku;
 using RoMoteNoAds.Services;
 using RoMoteNoAds.ViewModels;
 using RoMoteNoAds.Views;
+using SkiaSharp.Views.Maui.Controls.Hosting;
 
 namespace RoMoteNoAds;
 
@@ -15,6 +16,7 @@ public static class MauiProgram
         builder
             .UseMauiApp<App>()
             .UseMauiCommunityToolkit()
+            .UseSkiaSharp()
             .ConfigureFonts(fonts =>
             {
                 fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
