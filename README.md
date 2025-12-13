@@ -67,6 +67,42 @@ dotnet build src/RoMoteNoAds/RoMoteNoAds.csproj -f net10.0-ios
 4. Use the **Remote** tab for navigation and playback controls
 5. Use the **Channels** tab to launch installed apps
 
+## How It Works
+
+### Device Discovery (SSDP)
+
+Roku devices are discovered using SSDP (Simple Service Discovery Protocol), a UPnP discovery mechanism. The app sends a UDP multicast M-SEARCH request to `239.255.255.250:1900` with the search target `roku:ecp`:
+
+```
+M-SEARCH * HTTP/1.1
+HOST: 239.255.255.250:1900
+MAN: "ssdp:discover"
+ST: roku:ecp
+MX: 3
+```
+
+Roku devices respond with their location URL (e.g., `http://192.168.1.100:8060/`) which is used for all subsequent control commands.
+
+### Roku External Control Protocol (ECP)
+
+Once discovered, the app communicates with Roku devices via the [External Control Protocol](https://developer.roku.com/docs/developer-program/dev-tools/external-control-api.md) on port 8060:
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/keypress/{key}` | POST | Send remote button press |
+| `/launch/{channelId}` | POST | Launch a channel/app |
+| `/query/device-info` | GET | Get device information (XML) |
+| `/query/apps` | GET | List installed channels (XML) |
+| `/query/active-app` | GET | Get currently running app (XML) |
+| `/query/icon/{channelId}` | GET | Get channel icon (PNG) |
+
+### iOS Network Requirements
+
+For SSDP discovery to work on iOS, the app requires:
+
+- **`NSLocalNetworkUsageDescription`** - Prompts user for local network access permission
+- **`com.apple.developer.networking.multicast`** - Entitlement for UDP multicast (requires [Apple approval](https://developer.apple.com/contact/request/networking-multicast) for App Store distribution)
+
 Full disclosure: This was built as a test of a claude clode plugin "[superpowers](https://github.com/obra/superpowers/tree/main)" which I wanted to try. The initial commit was a total of 4 prompts, and ~8 answered as part of its plan mode questioning.
 
 Proof:

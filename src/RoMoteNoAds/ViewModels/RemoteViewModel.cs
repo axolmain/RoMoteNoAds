@@ -13,9 +13,13 @@ public partial class RemoteViewModel : BaseViewModel
 {
     private readonly IRokuService _rokuService;
     private readonly IStorageService _storageService;
+    private readonly IVolumeButtonService _volumeButtonService;
 
     [ObservableProperty]
     private RokuDevice? _currentDevice;
+
+    [ObservableProperty]
+    private RokuChannel? _activeChannel;
 
     [ObservableProperty]
     private bool _isKeyboardVisible;
@@ -31,14 +35,52 @@ public partial class RemoteViewModel : BaseViewModel
 
     public RemoteViewModel(
         IRokuService rokuService,
-        IStorageService storageService)
+        IStorageService storageService,
+        IVolumeButtonService volumeButtonService)
     {
         _rokuService = rokuService;
         _storageService = storageService;
+        _volumeButtonService = volumeButtonService;
 
         Title = "Remote";
 
         _rokuService.CommandFailed += OnCommandFailed;
+
+        // Subscribe to hardware volume button events
+        _volumeButtonService.VolumeUpPressed += OnHardwareVolumeUp;
+        _volumeButtonService.VolumeDownPressed += OnHardwareVolumeDown;
+    }
+
+    /// <summary>
+    /// Start listening for hardware volume buttons when the view appears.
+    /// </summary>
+    public void OnAppearing()
+    {
+        _volumeButtonService.StartListening();
+    }
+
+    /// <summary>
+    /// Stop listening for hardware volume buttons when the view disappears.
+    /// </summary>
+    public void OnDisappearing()
+    {
+        _volumeButtonService.StopListening();
+    }
+
+    private async void OnHardwareVolumeUp(object? sender, EventArgs e)
+    {
+        if (CurrentDevice != null && SupportsVolume)
+        {
+            await VolumeUpAsync();
+        }
+    }
+
+    private async void OnHardwareVolumeDown(object? sender, EventArgs e)
+    {
+        if (CurrentDevice != null && SupportsVolume)
+        {
+            await VolumeDownAsync();
+        }
     }
 
     public async Task InitializeAsync()
@@ -49,6 +91,37 @@ public partial class RemoteViewModel : BaseViewModel
             CurrentDevice = lastDevice;
             _rokuService.CurrentDevice = lastDevice.ToLibrary();
             UpdateCapabilities();
+            await RefreshActiveChannelAsync();
+        }
+    }
+
+    public async Task RefreshActiveChannelAsync()
+    {
+        if (_rokuService.CurrentDevice == null)
+            return;
+
+        try
+        {
+            var libActive = await _rokuService.GetActiveChannelAsync();
+            if (libActive != null)
+            {
+                var channel = RokuChannel.FromLibrary(libActive);
+                // Load icon
+                if (!string.IsNullOrEmpty(channel.IconUrl))
+                {
+                    channel.IconSource = ImageSource.FromUri(new Uri(channel.IconUrl));
+                }
+                ActiveChannel = channel;
+            }
+            else
+            {
+                ActiveChannel = null;
+            }
+        }
+        catch
+        {
+            // Silently fail - active channel is not critical
+            ActiveChannel = null;
         }
     }
 

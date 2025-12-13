@@ -5,217 +5,311 @@
              xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              x:Class="RoMoteNoAds.Views.RemotePage"
              x:DataType="vm:RemoteViewModel"
-             Title="Remote">
+             Title="Remote"
+             x:Name="ThisPage">
 
-    <Grid RowDefinitions="Auto,*,Auto" Padding="20">
-        <!-- Error Banner -->
-        <Border Grid.Row="0"
-                BackgroundColor="{StaticResource Error}"
-                Padding="12,8"
-                StrokeShape="RoundRectangle 8"
-                Margin="0,0,0,12"
-                IsVisible="{Binding ErrorMessage, Converter={toolkit:IsStringNotNullOrEmptyConverter}}">
-            <Label Text="{Binding ErrorMessage}"
-                   TextColor="White"
-                   FontSize="12"
-                   HorizontalOptions="Center" />
-        </Border>
+    <ContentPage.Resources>
+        <!-- SF Symbol-style text for buttons (using system font glyphs where available) -->
+        <Style x:Key="SymbolLabel" TargetType="Label">
+            <Setter Property="FontFamily" Value="{OnPlatform iOS='SF Pro', MacCatalyst='SF Pro', Default=''}" />
+            <Setter Property="HorizontalOptions" Value="Center" />
+            <Setter Property="VerticalOptions" Value="Center" />
+        </Style>
+    </ContentPage.Resources>
 
-        <!-- Top Bar: Power + Device Name -->
-        <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto" Margin="0,0,0,20">
-            <!-- Power Button -->
-            <Button Grid.Column="0"
-                    Text="⏻"
-                    Command="{Binding PowerToggleCommand}"
-                    Style="{StaticResource PowerButton}" />
+    <!-- Main layout: Split view on wide screens, single column on phone -->
+    <Grid ColumnDefinitions="{OnIdiom Phone='*', Tablet='2*,*', Desktop='2*,*'}"
+          ColumnSpacing="{OnIdiom Phone=0, Default=24}"
+          Padding="{OnIdiom Phone='16', Default='24'}">
 
-            <!-- Device Name -->
-            <Label Grid.Column="1"
-                   Text="{Binding CurrentDevice.DisplayName, FallbackValue='No Device'}"
-                   Style="{StaticResource SubtitleLabel}"
-                   VerticalOptions="Center"
-                   HorizontalOptions="Center"
-                   MaxLines="1"
-                   LineBreakMode="TailTruncation" />
+        <!-- ═══════════════════════════════════════════════════════════════════
+             LEFT SIDE: Remote Controls
+             ═══════════════════════════════════════════════════════════════════ -->
+        <Grid Grid.Column="0"
+              RowDefinitions="Auto,*,Auto"
+              MaximumWidthRequest="{OnIdiom Phone=500, Default=450}"
+              HorizontalOptions="{OnIdiom Phone=Fill, Default=Center}">
 
-            <!-- Placeholder for symmetry -->
-            <BoxView Grid.Column="2" WidthRequest="44" HeightRequest="44" Color="Transparent" />
-        </Grid>
+            <!-- Error Banner -->
+            <Border Grid.Row="0"
+                    BackgroundColor="{StaticResource SystemRed}"
+                    Padding="12,8"
+                    StrokeShape="RoundRectangle 8"
+                    Margin="0,0,0,12"
+                    IsVisible="{Binding ErrorMessage, Converter={toolkit:IsStringNotNullOrEmptyConverter}}">
+                <Label Text="{Binding ErrorMessage}"
+                       TextColor="White"
+                       FontSize="13"
+                       HorizontalOptions="Center" />
+            </Border>
 
-        <!-- Main Remote Controls -->
-        <Grid Grid.Row="1" RowDefinitions="*,Auto,*" ColumnDefinitions="Auto,*,Auto">
+            <!-- Top Bar: Power + Device Name (Phone only - tablet shows in sidebar) -->
+            <Grid Grid.Row="0"
+                  ColumnDefinitions="Auto,*,Auto"
+                  Margin="0,0,0,16"
+                  IsVisible="{OnIdiom Phone=True, Default=False}">
+                <Button Grid.Column="0"
+                        Text="⏻"
+                        Command="{Binding PowerToggleCommand}"
+                        Style="{StaticResource PowerButton}" />
+                <Label Grid.Column="1"
+                       Text="{Binding CurrentDevice.DisplayName, FallbackValue='No Device'}"
+                       Style="{StaticResource SubtitleLabel}"
+                       VerticalOptions="Center"
+                       HorizontalOptions="Center"
+                       MaxLines="1"
+                       LineBreakMode="TailTruncation" />
+                <BoxView Grid.Column="2" WidthRequest="44" HeightRequest="44" Color="Transparent" />
+            </Grid>
 
-            <!-- Volume Down (left side) -->
-            <Button Grid.Row="1" Grid.Column="0"
-                    Text="−"
-                    Command="{Binding VolumeDownCommand}"
-                    Style="{StaticResource GlassDPadButton}"
-                    WidthRequest="50"
-                    HeightRequest="50"
-                    Margin="0,0,20,0" />
-
-            <!-- D-Pad (center) -->
-            <Grid Grid.Row="1" Grid.Column="1"
-                  RowDefinitions="70,90,70"
-                  ColumnDefinitions="70,90,70"
-                  RowSpacing="8"
-                  ColumnSpacing="8"
-                  HorizontalOptions="Center"
+            <!-- Main Remote Controls -->
+            <Grid Grid.Row="1"
+                  RowDefinitions="*,Auto,*"
+                  ColumnDefinitions="Auto,*,Auto"
                   VerticalOptions="Center">
 
-                <!-- Up -->
-                <Button Grid.Row="0" Grid.Column="1"
-                        Text="▲"
-                        Command="{Binding PressUpCommand}"
-                        Style="{StaticResource GlassDPadButton}" />
+                <!-- Volume Down (left side) -->
+                <VerticalStackLayout Grid.Row="1" Grid.Column="0"
+                                     Spacing="8"
+                                     Margin="0,0,16,0"
+                                     VerticalOptions="Center">
+                    <Button Text="+"
+                            Command="{Binding VolumeUpCommand}"
+                            Style="{StaticResource VolumeButton}" />
+                    <Button Text="−"
+                            Command="{Binding VolumeDownCommand}"
+                            Style="{StaticResource VolumeButton}" />
+                    <Button Text="🔇"
+                            Command="{Binding VolumeMuteCommand}"
+                            Style="{StaticResource ActionButton}"
+                            WidthRequest="44"
+                            HeightRequest="44" />
+                </VerticalStackLayout>
 
-                <!-- Left -->
-                <Button Grid.Row="1" Grid.Column="0"
-                        Text="◀"
-                        Command="{Binding PressLeftCommand}"
-                        Style="{StaticResource GlassDPadButton}" />
+                <!-- D-Pad (center) -->
+                <Grid Grid.Row="1" Grid.Column="1"
+                      RowDefinitions="60,80,60"
+                      ColumnDefinitions="60,80,60"
+                      RowSpacing="8"
+                      ColumnSpacing="8"
+                      HorizontalOptions="Center"
+                      VerticalOptions="Center">
 
-                <!-- OK/Select -->
-                <Button Grid.Row="1" Grid.Column="1"
-                        Text="OK"
-                        Command="{Binding PressSelectCommand}"
-                        Style="{StaticResource GlassDPadCenterButton}" />
+                    <!-- Up -->
+                    <Button Grid.Row="0" Grid.Column="1"
+                            Text="▲"
+                            Command="{Binding PressUpCommand}"
+                            Style="{StaticResource DPadButton}" />
 
-                <!-- Right -->
-                <Button Grid.Row="1" Grid.Column="2"
-                        Text="▶"
-                        Command="{Binding PressRightCommand}"
-                        Style="{StaticResource GlassDPadButton}" />
+                    <!-- Left -->
+                    <Button Grid.Row="1" Grid.Column="0"
+                            Text="◀"
+                            Command="{Binding PressLeftCommand}"
+                            Style="{StaticResource DPadButton}" />
 
-                <!-- Down -->
-                <Button Grid.Row="2" Grid.Column="1"
-                        Text="▼"
-                        Command="{Binding PressDownCommand}"
-                        Style="{StaticResource GlassDPadButton}" />
+                    <!-- OK/Select (accent color) -->
+                    <Button Grid.Row="1" Grid.Column="1"
+                            Text="OK"
+                            Command="{Binding PressSelectCommand}"
+                            Style="{StaticResource DPadCenterButton}" />
+
+                    <!-- Right -->
+                    <Button Grid.Row="1" Grid.Column="2"
+                            Text="▶"
+                            Command="{Binding PressRightCommand}"
+                            Style="{StaticResource DPadButton}" />
+
+                    <!-- Down -->
+                    <Button Grid.Row="2" Grid.Column="1"
+                            Text="▼"
+                            Command="{Binding PressDownCommand}"
+                            Style="{StaticResource DPadButton}" />
+                </Grid>
+
+                <!-- Power button (right side, tablet/desktop) -->
+                <Button Grid.Row="0" Grid.Column="2"
+                        Text="⏻"
+                        Command="{Binding PowerToggleCommand}"
+                        Style="{StaticResource PowerButton}"
+                        IsVisible="{OnIdiom Phone=False, Default=True}"
+                        VerticalOptions="End"
+                        Margin="16,0,0,0" />
             </Grid>
 
-            <!-- Volume Up (right side) -->
-            <Button Grid.Row="1" Grid.Column="2"
-                    Text="+"
-                    Command="{Binding VolumeUpCommand}"
-                    Style="{StaticResource GlassDPadButton}"
-                    WidthRequest="50"
-                    HeightRequest="50"
-                    Margin="20,0,0,0" />
+            <!-- Bottom Controls -->
+            <VerticalStackLayout Grid.Row="2" Spacing="12" Margin="0,16,0,0">
 
-            <!-- Mute button (below volume down) -->
-            <Button Grid.Row="2" Grid.Column="0"
-                    Text="🔇"
-                    Command="{Binding VolumeMuteCommand}"
-                    Style="{StaticResource GlassActionButton}"
-                    VerticalOptions="Start"
-                    Margin="0,20,20,0" />
+                <!-- Playback Controls -->
+                <Grid ColumnDefinitions="*,*,*" ColumnSpacing="12" HorizontalOptions="Center">
+                    <Button Grid.Column="0"
+                            Text="⏪"
+                            Command="{Binding PressRewindCommand}"
+                            Style="{StaticResource PlaybackButton}" />
+                    <Button Grid.Column="1"
+                            Text="▶⏸"
+                            Command="{Binding PressPlayCommand}"
+                            Style="{StaticResource PlaybackButton}"
+                            BackgroundColor="{StaticResource AccentColor}"
+                            TextColor="White" />
+                    <Button Grid.Column="2"
+                            Text="⏩"
+                            Command="{Binding PressFastForwardCommand}"
+                            Style="{StaticResource PlaybackButton}" />
+                </Grid>
+
+                <!-- Action Row: Home, Back, Star, Search -->
+                <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="12" HorizontalOptions="Center" MaximumWidthRequest="280">
+                    <Button Grid.Column="0"
+                            Text="⌂"
+                            Command="{Binding PressHomeCommand}"
+                            Style="{StaticResource ActionButton}"
+                            FontSize="22" />
+                    <Button Grid.Column="1"
+                            Text="◁"
+                            Command="{Binding PressBackCommand}"
+                            Style="{StaticResource ActionButton}"
+                            FontSize="20" />
+                    <Button Grid.Column="2"
+                            Text="★"
+                            Command="{Binding PressInfoCommand}"
+                            Style="{StaticResource ActionButton}"
+                            FontSize="18" />
+                    <Button Grid.Column="3"
+                            Text="⌕"
+                            Command="{Binding PressSearchCommand}"
+                            Style="{StaticResource ActionButton}"
+                            FontSize="20" />
+                </Grid>
+
+                <!-- Utility Row -->
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="12" HorizontalOptions="Center" MaximumWidthRequest="320">
+                    <Button Grid.Column="0"
+                            Text="↻ Replay"
+                            Command="{Binding PressReplayCommand}"
+                            Style="{StaticResource UtilityButton}"
+                            HorizontalOptions="Fill" />
+                    <Button Grid.Column="1"
+                            Text="⌨ Keyboard"
+                            Command="{Binding ShowKeyboardCommand}"
+                            Style="{StaticResource UtilityButton}"
+                            HorizontalOptions="Fill" />
+                </Grid>
+            </VerticalStackLayout>
         </Grid>
 
-        <!-- Bottom Controls -->
-        <VerticalStackLayout Grid.Row="2" Spacing="16">
-            <!-- Playback Controls -->
-            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="12">
-                <Button Grid.Column="0"
-                        Text="⏪"
-                        Command="{Binding PressRewindCommand}"
-                        Style="{StaticResource GlassPlaybackButton}"
-                        HorizontalOptions="Fill"
-                        HeightRequest="50" />
-                <Button Grid.Column="1"
-                        Text="▶❚❚"
-                        Command="{Binding PressPlayCommand}"
-                        Style="{StaticResource GlassPlaybackButton}"
-                        BackgroundColor="{StaticResource Primary}"
-                        TextColor="White"
-                        HorizontalOptions="Fill"
-                        HeightRequest="50" />
-                <Button Grid.Column="2"
-                        Text="⏩"
-                        Command="{Binding PressFastForwardCommand}"
-                        Style="{StaticResource GlassPlaybackButton}"
-                        HorizontalOptions="Fill"
-                        HeightRequest="50" />
-            </Grid>
+        <!-- ═══════════════════════════════════════════════════════════════════
+             RIGHT SIDE: Now Playing Panel (Tablet/Desktop only)
+             ═══════════════════════════════════════════════════════════════════ -->
+        <Frame Grid.Column="1"
+               Style="{StaticResource CardFrame}"
+               IsVisible="{OnIdiom Phone=False, Default=True}"
+               Padding="20"
+               VerticalOptions="Center"
+               MaximumHeightRequest="400">
+            <VerticalStackLayout Spacing="16">
 
-            <!-- Action Row: Home, Back, Star, Search -->
-            <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="12">
-                <Button Grid.Column="0"
-                        Text="🏠"
-                        Command="{Binding PressHomeCommand}"
-                        Style="{StaticResource GlassActionButton}"
-                        HorizontalOptions="Fill"
-                        HeightRequest="50" />
-                <Button Grid.Column="1"
-                        Text="←"
-                        Command="{Binding PressBackCommand}"
-                        Style="{StaticResource GlassActionButton}"
-                        HorizontalOptions="Fill"
-                        HeightRequest="50"
-                        FontSize="22" />
-                <Button Grid.Column="2"
-                        Text="★"
-                        Command="{Binding PressInfoCommand}"
-                        Style="{StaticResource GlassActionButton}"
-                        HorizontalOptions="Fill"
-                        HeightRequest="50" />
-                <Button Grid.Column="3"
-                        Text="🔍"
-                        Command="{Binding PressSearchCommand}"
-                        Style="{StaticResource GlassActionButton}"
-                        HorizontalOptions="Fill"
-                        HeightRequest="50" />
-            </Grid>
+                <!-- Now Playing Header -->
+                <Label Text="Now Playing"
+                       Style="{StaticResource HeadlineLabel}" />
 
-            <!-- Utility Row -->
-            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
-                <Button Grid.Column="0"
-                        Text="↺ Replay"
-                        Command="{Binding PressReplayCommand}"
-                        Style="{StaticResource GlassUtilityButton}"
-                        HorizontalOptions="Fill"
-                        HeightRequest="44" />
-                <Button Grid.Column="1"
-                        Text="⌨ Keyboard"
-                        Command="{Binding ShowKeyboardCommand}"
-                        Style="{StaticResource GlassUtilityButton}"
-                        HorizontalOptions="Fill"
-                        HeightRequest="44" />
-            </Grid>
-        </VerticalStackLayout>
+                <!-- Active Channel Display -->
+                <VerticalStackLayout Spacing="12"
+                                     IsVisible="{Binding ActiveChannel, Converter={toolkit:IsNotNullConverter}}">
+                    <Border StrokeThickness="0"
+                            HeightRequest="120"
+                            WidthRequest="120"
+                            HorizontalOptions="Center">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="16" />
+                        </Border.StrokeShape>
+                        <Image Source="{Binding ActiveChannel.IconSource}"
+                               Aspect="AspectFit" />
+                    </Border>
+                    <Label Text="{Binding ActiveChannel.Name}"
+                           Style="{StaticResource BodyLabel}"
+                           HorizontalOptions="Center"
+                           FontAttributes="Bold" />
+                </VerticalStackLayout>
 
-        <!-- Keyboard Overlay -->
-        <Grid Grid.RowSpan="3"
+                <!-- No Active Channel -->
+                <VerticalStackLayout Spacing="8"
+                                     IsVisible="{Binding ActiveChannel, Converter={toolkit:IsNullConverter}}"
+                                     HorizontalOptions="Center">
+                    <Label Text="📺"
+                           FontSize="48"
+                           HorizontalOptions="Center" />
+                    <Label Text="Nothing playing"
+                           Style="{StaticResource SubtitleLabel}"
+                           HorizontalOptions="Center" />
+                </VerticalStackLayout>
+
+                <!-- Separator -->
+                <BoxView HeightRequest="1"
+                         Color="{AppThemeBinding Light={StaticResource SeparatorLight}, Dark={StaticResource SeparatorDark}}"
+                         Margin="0,8" />
+
+                <!-- Device Info -->
+                <VerticalStackLayout Spacing="4">
+                    <Label Text="Connected Device"
+                           Style="{StaticResource CaptionLabel}" />
+                    <Label Text="{Binding CurrentDevice.DisplayName, FallbackValue='No device selected'}"
+                           Style="{StaticResource BodyLabel}" />
+                    <Label Text="{Binding CurrentDevice.IpAddress}"
+                           Style="{StaticResource SubtitleLabel}"
+                           IsVisible="{Binding CurrentDevice, Converter={toolkit:IsNotNullConverter}}" />
+                </VerticalStackLayout>
+
+            </VerticalStackLayout>
+        </Frame>
+
+        <!-- ═══════════════════════════════════════════════════════════════════
+             Keyboard Modal Overlay
+             ═══════════════════════════════════════════════════════════════════ -->
+        <Grid Grid.ColumnSpan="2"
               IsVisible="{Binding IsKeyboardVisible}"
-              BackgroundColor="{AppThemeBinding Light=#80FFFFFF, Dark=#80000000}">
-            <Frame Style="{StaticResource GlassCard}"
+              BackgroundColor="{AppThemeBinding Light=#80F2F2F7, Dark=#80000000}"
+              InputTransparent="False">
+            <Grid.GestureRecognizers>
+                <TapGestureRecognizer Command="{Binding HideKeyboardCommand}" />
+            </Grid.GestureRecognizers>
+
+            <Frame Style="{StaticResource CardFrame}"
                    VerticalOptions="Center"
                    HorizontalOptions="Center"
-                   WidthRequest="320"
-                   Padding="20">
-                <VerticalStackLayout Spacing="16">
+                   WidthRequest="340"
+                   Padding="24">
+                <Frame.GestureRecognizers>
+                    <TapGestureRecognizer />
+                </Frame.GestureRecognizers>
+
+                <VerticalStackLayout Spacing="20">
                     <Label Text="Enter Text"
                            Style="{StaticResource TitleLabel}"
                            HorizontalOptions="Center" />
 
                     <Entry Placeholder="Type here..."
                            Text="{Binding KeyboardText}"
-                           ReturnCommand="{Binding SendKeyboardTextCommand}" />
+                           ReturnCommand="{Binding SendKeyboardTextCommand}"
+                           ReturnType="Send" />
 
-                    <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
                         <Button Grid.Column="0"
                                 Text="⌫"
                                 Command="{Binding SendBackspaceCommand}"
-                                Style="{StaticResource GlassUtilityButton}" />
+                                Style="{StaticResource SecondaryButton}"
+                                WidthRequest="60"
+                                HeightRequest="44" />
                         <Button Grid.Column="1"
                                 Text="Send"
                                 Command="{Binding SendKeyboardTextCommand}"
                                 Style="{StaticResource PrimaryButton}"
-                                HeightRequest="40" />
+                                HeightRequest="44" />
                         <Button Grid.Column="2"
                                 Text="Cancel"
                                 Command="{Binding HideKeyboardCommand}"
-                                Style="{StaticResource GlassUtilityButton}" />
+                                Style="{StaticResource SecondaryButton}"
+                                WidthRequest="80"
+                                HeightRequest="44" />
                     </Grid>
                 </VerticalStackLayout>
             </Frame>

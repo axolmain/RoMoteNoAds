@@ -2,5 +2,9 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<!-- Multicast networking entitlement for SSDP device discovery -->
+	<!-- Note: Requires Apple approval via provisioning profile for App Store -->
+	<key>com.apple.developer.networking.multicast</key>
+	<true/>
 </dict>
 </plist>

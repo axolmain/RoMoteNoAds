@@ -27,6 +27,9 @@ public partial class RemotePage : ContentPage
         base.OnAppearing();
         await _viewModel.InitializeAsync();
 
+        // Start listening for hardware volume buttons (iOS)
+        _viewModel.OnAppearing();
+
 #if MACCATALYST
         SetupKeyboardHandling();
 #endif
@@ -35,6 +38,9 @@ public partial class RemotePage : ContentPage
     protected override void OnDisappearing()
     {
         base.OnDisappearing();
+
+        // Stop listening for hardware volume buttons
+        _viewModel.OnDisappearing();
 
 #if MACCATALYST
         TeardownKeyboardHandling();

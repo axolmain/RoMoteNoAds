@@ -10,56 +10,72 @@
 
     <RefreshView IsRefreshing="{Binding IsRefreshing}"
                  Command="{Binding RefreshChannelsCommand}">
-        <Grid RowDefinitions="Auto,*" Padding="16">
+        <Grid RowDefinitions="Auto,*"
+              Padding="{OnIdiom Phone='16', Default='24'}">
 
             <!-- Header -->
-            <VerticalStackLayout Grid.Row="0" Spacing="8">
+            <VerticalStackLayout Grid.Row="0" Spacing="12">
                 <!-- Active Channel Info -->
                 <Frame Style="{StaticResource CardFrame}"
-                       Padding="12"
+                       Padding="16"
                        IsVisible="{Binding ActiveChannel, Converter={toolkit:IsNotNullConverter}}">
-                    <HorizontalStackLayout Spacing="12">
-                        <Image Source="{Binding ActiveChannel.IconSource}"
-                               HeightRequest="40"
-                               WidthRequest="40"
-                               Aspect="AspectFit" />
-                        <VerticalStackLayout VerticalOptions="Center">
+                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="16">
+                        <Border Grid.Column="0"
+                                StrokeThickness="0"
+                                HeightRequest="56"
+                                WidthRequest="56">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="12" />
+                            </Border.StrokeShape>
+                            <Image Source="{Binding ActiveChannel.IconSource}"
+                                   Aspect="AspectFit" />
+                        </Border>
+                        <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="2">
                             <Label Text="Now Playing"
-                                   Style="{StaticResource SubtitleLabel}"
-                                   FontSize="11" />
+                                   Style="{StaticResource CaptionLabel}" />
                             <Label Text="{Binding ActiveChannel.Name}"
-                                   Style="{StaticResource BodyLabel}"
-                                   FontAttributes="Bold" />
+                                   Style="{StaticResource HeadlineLabel}" />
                         </VerticalStackLayout>
-                    </HorizontalStackLayout>
+                        <!-- Green dot indicator -->
+                        <Ellipse Grid.Column="2"
+                                 Fill="{StaticResource SystemGreen}"
+                                 HeightRequest="10"
+                                 WidthRequest="10"
+                                 VerticalOptions="Center" />
+                    </Grid>
                 </Frame>
 
                 <!-- Error Message -->
-                <Border BackgroundColor="{StaticResource Error}"
-                       Padding="12,8"
-                       IsVisible="{Binding ErrorMessage, Converter={toolkit:IsStringNotNullOrEmptyConverter}}">
+                <Border BackgroundColor="{StaticResource SystemRed}"
+                        Padding="12,8"
+                        StrokeShape="RoundRectangle 8"
+                        IsVisible="{Binding ErrorMessage, Converter={toolkit:IsStringNotNullOrEmptyConverter}}">
                     <Label Text="{Binding ErrorMessage}"
                            TextColor="White"
-                           FontSize="12"
+                           FontSize="13"
                            HorizontalOptions="Center" />
                 </Border>
             </VerticalStackLayout>
 
-            <!-- Channel Grid -->
+            <!-- Channel Grid - Adaptive columns based on device -->
             <CollectionView Grid.Row="1"
-                           ItemsSource="{Binding Channels}"
-                           Margin="0,16,0,0">
+                            ItemsSource="{Binding Channels}"
+                            Margin="0,16,0,0">
                 <CollectionView.ItemsLayout>
                     <GridItemsLayout Orientation="Vertical"
-                                    Span="3"
-                                    HorizontalItemSpacing="12"
-                                    VerticalItemSpacing="12" />
+                                     Span="{OnIdiom Phone=3, Tablet=5, Desktop=6}"
+                                     HorizontalItemSpacing="{OnIdiom Phone=12, Default=16}"
+                                     VerticalItemSpacing="{OnIdiom Phone=12, Default=16}" />
                 </CollectionView.ItemsLayout>
 
                 <CollectionView.EmptyView>
                     <VerticalStackLayout VerticalOptions="Center"
-                                        HorizontalOptions="Center"
-                                        Spacing="16">
+                                         HorizontalOptions="Center"
+                                         Spacing="16"
+                                         Padding="32">
+                        <Label Text="📺"
+                               FontSize="64"
+                               HorizontalOptions="Center" />
                         <Label Text="No Channels"
                                Style="{StaticResource TitleLabel}"
                                HorizontalOptions="Center" />
@@ -69,53 +85,56 @@
                                HorizontalTextAlignment="Center" />
                         <Button Text="Refresh"
                                 Command="{Binding RefreshChannelsCommand}"
-                                Style="{StaticResource PrimaryButton}" />
+                                Style="{StaticResource PrimaryButton}"
+                                HorizontalOptions="Center" />
                     </VerticalStackLayout>
                 </CollectionView.EmptyView>
 
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="models:RokuChannel">
-                        <Frame Style="{StaticResource CardFrame}"
-                               Padding="8"
-                               BorderColor="{Binding IsActive, Converter={StaticResource BoolToColorConverter}}">
-                            <Frame.GestureRecognizers>
-                                <TapGestureRecognizer
-                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ChannelsViewModel}}, Path=LaunchChannelCommand}"
-                                    CommandParameter="{Binding .}" />
-                            </Frame.GestureRecognizers>
+                        <Grid Padding="4">
+                            <Frame Style="{StaticResource CardFrame}"
+                                   Padding="12">
+                                <Frame.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ChannelsViewModel}}, Path=LaunchChannelCommand}"
+                                        CommandParameter="{Binding .}" />
+                                </Frame.GestureRecognizers>
 
-                            <VerticalStackLayout Spacing="8"
-                                                HorizontalOptions="Center">
-                                <!-- Channel Icon -->
-                                <Border StrokeThickness="0"
-                                        HeightRequest="60"
-                                        WidthRequest="60">
-                                    <Border.StrokeShape>
-                                        <RoundRectangle CornerRadius="8" />
-                                    </Border.StrokeShape>
-                                    <Image Source="{Binding IconSource}"
-                                           Aspect="AspectFit"
-                                           HeightRequest="60"
-                                           WidthRequest="60" />
-                                </Border>
+                                <VerticalStackLayout Spacing="8"
+                                                     HorizontalOptions="Center">
+                                    <!-- Channel Icon with continuous corner radius (iOS-style) -->
+                                    <Grid>
+                                        <Border StrokeThickness="0"
+                                                HeightRequest="{OnIdiom Phone=60, Default=72}"
+                                                WidthRequest="{OnIdiom Phone=60, Default=72}">
+                                            <Border.StrokeShape>
+                                                <RoundRectangle CornerRadius="14" />
+                                            </Border.StrokeShape>
+                                            <Image Source="{Binding IconSource}"
+                                                   Aspect="AspectFit" />
+                                        </Border>
+                                        <!-- Active indicator dot (top-right) -->
+                                        <Ellipse Fill="{StaticResource SystemGreen}"
+                                                 HeightRequest="12"
+                                                 WidthRequest="12"
+                                                 HorizontalOptions="End"
+                                                 VerticalOptions="Start"
+                                                 Margin="0,-2,-2,0"
+                                                 IsVisible="{Binding IsActive}" />
+                                    </Grid>
 
-                                <!-- Channel Name -->
-                                <Label Text="{Binding Name}"
-                                       Style="{StaticResource BodyLabel}"
-                                       FontSize="12"
-                                       LineBreakMode="TailTruncation"
-                                       MaxLines="2"
-                                       HorizontalOptions="Center"
-                                       HorizontalTextAlignment="Center" />
-
-                                <!-- Active Indicator -->
-                                <Label Text="● Now Playing"
-                                       TextColor="{StaticResource Success}"
-                                       FontSize="10"
-                                       IsVisible="{Binding IsActive}"
-                                       HorizontalOptions="Center" />
-                            </VerticalStackLayout>
-                        </Frame>
+                                    <!-- Channel Name -->
+                                    <Label Text="{Binding Name}"
+                                           Style="{StaticResource BodyLabel}"
+                                           FontSize="{OnIdiom Phone=12, Default=13}"
+                                           LineBreakMode="TailTruncation"
+                                           MaxLines="2"
+                                           HorizontalOptions="Center"
+                                           HorizontalTextAlignment="Center" />
+                                </VerticalStackLayout>
+                            </Frame>
+                        </Grid>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>
@@ -123,12 +142,12 @@
             <!-- Loading Overlay -->
             <Grid Grid.RowSpan="2"
                   IsVisible="{Binding IsBusy}"
-                  BackgroundColor="{AppThemeBinding Light=#80FFFFFF, Dark=#80000000}">
+                  BackgroundColor="{AppThemeBinding Light=#80F2F2F7, Dark=#80000000}">
                 <ActivityIndicator IsRunning="{Binding IsBusy}"
-                                  HeightRequest="50"
-                                  WidthRequest="50"
-                                  VerticalOptions="Center"
-                                  HorizontalOptions="Center" />
+                                   HeightRequest="50"
+                                   WidthRequest="50"
+                                   VerticalOptions="Center"
+                                   HorizontalOptions="Center" />
             </Grid>
         </Grid>
     </RefreshView>

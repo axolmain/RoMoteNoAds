@@ -28,13 +28,8 @@
 	</array>
 	<key>XSAppIconAssets</key>
 	<string>Assets.xcassets/appicon.appiconset</string>
-	<!-- Local Network Access Permission -->
+	<!-- Local Network Access Permission (required for SSDP discovery) -->
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>RoMoteNoAds needs local network access to discover and control Roku devices on your network.</string>
-	<!-- Bonjour Services for SSDP Discovery -->
-	<key>NSBonjourServices</key>
-	<array>
-		<string>_roku._tcp</string>
-	</array>
 </dict>
 </plist>

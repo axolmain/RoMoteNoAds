@@ -2,30 +2,23 @@
 <Shell xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
        xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
        xmlns:views="clr-namespace:RoMoteNoAds.Views"
-       x:Class="RoMoteNoAds.AppShell"
-       Shell.FlyoutBehavior="Disabled">
+       x:Class="RoMoteNoAds.AppShell">
 
+    <!-- iPhone: Bottom TabBar navigation -->
+    <!-- iPad/Mac: Sidebar/Flyout navigation -->
     <TabBar>
-        <ShellContent
-            Title="Remote"
-            Icon="remote_icon.svg"
-            ContentTemplate="{DataTemplate views:RemotePage}" />
-
-        <ShellContent
-            Title="Channels"
-            Icon="channels_icon.svg"
-            ContentTemplate="{DataTemplate views:ChannelsPage}" />
-
-        <ShellContent
-            Title="Shortcuts"
-            Icon="shortcuts_icon.svg"
-            ContentTemplate="{DataTemplate views:ShortcutsPage}"
-            IsVisible="{OnPlatform MacCatalyst=True, Default=False}" />
-
-        <ShellContent
-            Title="Devices"
-            Icon="devices_icon.svg"
-            ContentTemplate="{DataTemplate views:DeviceSelectionPage}" />
+        <ShellContent Title="Remote"
+                      Icon="remote_icon.svg"
+                      ContentTemplate="{DataTemplate views:RemotePage}" />
+        <ShellContent Title="Channels"
+                      Icon="channels_icon.svg"
+                      ContentTemplate="{DataTemplate views:ChannelsPage}" />
+        <ShellContent Title="Shortcuts"
+                      Icon="shortcuts_icon.svg"
+                      ContentTemplate="{DataTemplate views:ShortcutsPage}" />
+        <ShellContent Title="Devices"
+                      Icon="devices_icon.svg"
+                      ContentTemplate="{DataTemplate views:DeviceSelectionPage}" />
     </TabBar>
 
 </Shell>

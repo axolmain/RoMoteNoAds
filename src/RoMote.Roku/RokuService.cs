@@ -22,9 +22,10 @@ public partial class RokuService : IRokuService
 
     private const string SsdpSearchRequest =
         "M-SEARCH * HTTP/1.1\r\n" +
-        "Host: 239.255.255.250:1900\r\n" +
-        "Man: \"ssdp:discover\"\r\n" +
+        "HOST: 239.255.255.250:1900\r\n" +
+        "MAN: \"ssdp:discover\"\r\n" +
         "ST: roku:ecp\r\n" +
+        "MX: 3\r\n" +
         "\r\n";
 
     private static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds(5);
@@ -49,20 +50,30 @@ public partial class RokuService : IRokuService
         timeout ??= DefaultTimeout;
         var devices = new Dictionary<string, RokuDevice>();
 
+        System.Diagnostics.Debug.WriteLine($"[SSDP] Starting discovery with timeout: {timeout.Value.TotalSeconds}s");
+
         try
         {
             using var udpClient = new UdpClient();
             udpClient.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
             udpClient.Client.Bind(new IPEndPoint(IPAddress.Any, 0));
 
+            var localEndpoint = udpClient.Client.LocalEndPoint as IPEndPoint;
+            System.Diagnostics.Debug.WriteLine($"[SSDP] Bound to local endpoint: {localEndpoint}");
+
             var multicastEndpoint = new IPEndPoint(IPAddress.Parse(SsdpMulticastAddress), SsdpPort);
             var requestBytes = Encoding.UTF8.GetBytes(SsdpSearchRequest);
 
+            System.Diagnostics.Debug.WriteLine($"[SSDP] Sending M-SEARCH to {multicastEndpoint}");
+            System.Diagnostics.Debug.WriteLine($"[SSDP] Request:\n{SsdpSearchRequest}");
+
             await udpClient.SendAsync(requestBytes, requestBytes.Length, multicastEndpoint);
+            System.Diagnostics.Debug.WriteLine($"[SSDP] M-SEARCH sent successfully ({requestBytes.Length} bytes)");
 
             var endTime = DateTime.UtcNow.Add(timeout.Value);
             udpClient.Client.ReceiveTimeout = (int)timeout.Value.TotalMilliseconds;
 
+            var responseCount = 0;
             while (DateTime.UtcNow < endTime && !cancellationToken.IsCancellationRequested)
             {
                 try
@@ -73,31 +84,48 @@ public partial class RokuService : IRokuService
                     var completedTask = await Task.WhenAny(receiveTask, delayTask);
 
                     if (completedTask == delayTask)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[SSDP] Timeout reached, received {responseCount} responses");
                         break;
+                    }
 
                     var result = await receiveTask;
+                    responseCount++;
                     var response = Encoding.UTF8.GetString(result.Buffer);
+
+                    System.Diagnostics.Debug.WriteLine($"[SSDP] Response #{responseCount} from {result.RemoteEndPoint}:");
+                    System.Diagnostics.Debug.WriteLine(response);
 
                     var device = await ParseSsdpResponseAsync(response, cancellationToken);
                     if (device != null && !devices.ContainsKey(device.SerialNumber))
                     {
+                        System.Diagnostics.Debug.WriteLine($"[SSDP] Found device: {device.FriendlyName} ({device.IpAddress})");
                         devices[device.SerialNumber] = device;
                         DeviceDiscovered?.Invoke(this, device);
                     }
+                    else if (device == null)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[SSDP] Response #{responseCount} was not a valid Roku device");
+                    }
                 }
-                catch (SocketException)
+                catch (SocketException ex)
                 {
+                    System.Diagnostics.Debug.WriteLine($"[SSDP] SocketException: {ex.SocketErrorCode} - {ex.Message}");
                     break;
                 }
                 catch (OperationCanceledException)
                 {
+                    System.Diagnostics.Debug.WriteLine($"[SSDP] Cancelled");
                     break;
                 }
             }
+
+            System.Diagnostics.Debug.WriteLine($"[SSDP] Discovery complete. Found {devices.Count} devices from {responseCount} responses");
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"SSDP discovery error: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"[SSDP] Discovery error: {ex.GetType().Name} - {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"[SSDP] Stack trace: {ex.StackTrace}");
         }
 
         return devices.Values;

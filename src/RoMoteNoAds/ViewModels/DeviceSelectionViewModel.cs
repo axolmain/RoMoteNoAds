@@ -21,7 +21,10 @@ public partial class DeviceSelectionViewModel : BaseViewModel, IDisposable
     private static readonly TimeSpan AutoScanInterval = TimeSpan.FromSeconds(30);
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasDevices))]
     private ObservableCollection<RokuDevice> _devices = new();
+
+    public bool HasDevices => Devices.Count > 0;
 
     [ObservableProperty]
     private RokuDevice? _selectedDevice;
@@ -43,6 +46,7 @@ public partial class DeviceSelectionViewModel : BaseViewModel, IDisposable
         Title = "Devices";
 
         _rokuService.DeviceDiscovered += OnDeviceDiscovered;
+        _devices.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasDevices));
     }
 
     public async Task InitializeAsync()
@@ -148,6 +152,8 @@ public partial class DeviceSelectionViewModel : BaseViewModel, IDisposable
         if (IsScanning)
             return;
 
+        System.Diagnostics.Debug.WriteLine("[VM] ScanForDevicesAsync started");
+
         try
         {
             IsScanning = true;
@@ -156,28 +162,42 @@ public partial class DeviceSelectionViewModel : BaseViewModel, IDisposable
             var discoveredDevices = await _rokuService.DiscoverDevicesAsync(
                 TimeSpan.FromSeconds(5));
 
-            foreach (var libDevice in discoveredDevices)
+            var deviceList = discoveredDevices.ToList();
+            System.Diagnostics.Debug.WriteLine($"[VM] Received {deviceList.Count} devices from service");
+
+            foreach (var libDevice in deviceList)
             {
+                System.Diagnostics.Debug.WriteLine($"[VM] Processing: {libDevice.FriendlyName} ({libDevice.IpAddress}) Serial: {libDevice.SerialNumber}");
                 var device = RokuDevice.FromLibrary(libDevice);
-                if (!Devices.Any(d => d.SerialNumber == device.SerialNumber))
+                System.Diagnostics.Debug.WriteLine($"[VM] Converted to app model: {device.DisplayName}");
+
+                var exists = Devices.Any(d => d.SerialNumber == device.SerialNumber);
+                System.Diagnostics.Debug.WriteLine($"[VM] Already exists in collection: {exists}");
+
+                if (!exists)
                 {
                     Devices.Add(device);
+                    System.Diagnostics.Debug.WriteLine($"[VM] Added to Devices collection. Count: {Devices.Count}, HasDevices: {HasDevices}");
                     await _storageService.SaveDeviceAsync(device);
                 }
             }
 
-            if (!discoveredDevices.Any())
+            System.Diagnostics.Debug.WriteLine($"[VM] Final Devices.Count: {Devices.Count}, HasDevices: {HasDevices}");
+
+            if (!deviceList.Any())
             {
                 SetError("No Roku devices found on your network");
             }
         }
         catch (Exception ex)
         {
+            System.Diagnostics.Debug.WriteLine($"[VM] Error: {ex.Message}");
             SetError($"Scan failed: {ex.Message}");
         }
         finally
         {
             IsScanning = false;
+            System.Diagnostics.Debug.WriteLine("[VM] ScanForDevicesAsync completed");
         }
     }
 

@@ -8,113 +8,143 @@
              x:DataType="vm:ShortcutsViewModel"
              Title="Shortcuts">
 
-    <Grid RowDefinitions="Auto,*,Auto" Padding="16">
-        <!-- Header -->
-        <HorizontalStackLayout Grid.Row="0" Spacing="12">
-            <Label Text="Shortcuts"
-                   Style="{StaticResource TitleLabel}"
-                   VerticalOptions="Center" />
-            <Button Text="{Binding IsEditing, Converter={toolkit:BoolToObjectConverter TrueObject='Done', FalseObject='Edit'}}"
-                    Command="{Binding ToggleEditingCommand}"
-                    Style="{StaticResource GlassUtilityButton}"
-                    WidthRequest="80" />
-        </HorizontalStackLayout>
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="{Binding IsEditing, Converter={toolkit:BoolToObjectConverter TrueObject='Done', FalseObject='Edit'}}"
+                     Command="{Binding ToggleEditingCommand}" />
+        <ToolbarItem Text="Add"
+                     Command="{Binding OpenEditorCommand}"
+                     IconImageSource="plus" />
+    </ContentPage.ToolbarItems>
 
-        <!-- Shortcuts Grid -->
-        <CollectionView Grid.Row="1"
-                       ItemsSource="{Binding Shortcuts}"
-                       Margin="0,16,0,0">
+    <Grid RowDefinitions="*"
+          Padding="{OnIdiom Phone='16', Default='24'}">
+
+        <!-- Shortcuts Grid - Adaptive columns -->
+        <CollectionView ItemsSource="{Binding Shortcuts}">
             <CollectionView.EmptyView>
                 <VerticalStackLayout VerticalOptions="Center"
-                                    HorizontalOptions="Center"
-                                    Spacing="16">
+                                     HorizontalOptions="Center"
+                                     Spacing="16"
+                                     Padding="32">
+                    <Label Text="⚡"
+                           FontSize="64"
+                           HorizontalOptions="Center" />
                     <Label Text="No Shortcuts"
                            Style="{StaticResource TitleLabel}"
                            HorizontalOptions="Center" />
-                    <Label Text="Add shortcuts for quick access to channels and actions"
+                    <Label Text="Add shortcuts for quick access to your favorite channels"
                            Style="{StaticResource SubtitleLabel}"
                            HorizontalOptions="Center"
                            HorizontalTextAlignment="Center" />
+                    <Button Text="Add Shortcut"
+                            Command="{Binding OpenEditorCommand}"
+                            Style="{StaticResource PrimaryButton}"
+                            HorizontalOptions="Center" />
                 </VerticalStackLayout>
             </CollectionView.EmptyView>
 
             <CollectionView.ItemsLayout>
                 <GridItemsLayout Orientation="Vertical"
-                                Span="3"
-                                HorizontalItemSpacing="12"
-                                VerticalItemSpacing="12" />
+                                 Span="{OnIdiom Phone=3, Tablet=5, Desktop=6}"
+                                 HorizontalItemSpacing="{OnIdiom Phone=12, Default=16}"
+                                 VerticalItemSpacing="{OnIdiom Phone=12, Default=16}" />
             </CollectionView.ItemsLayout>
 
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="models:Shortcut">
-                    <Frame Style="{StaticResource GlassCard}"
-                           Padding="12"
-                           HeightRequest="100">
-                        <Frame.GestureRecognizers>
-                            <TapGestureRecognizer
-                                Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ShortcutsViewModel}}, Path=ExecuteShortcutCommand}"
-                                CommandParameter="{Binding .}" />
-                        </Frame.GestureRecognizers>
+                    <Grid Padding="4">
+                        <Frame Style="{StaticResource CardFrame}"
+                               Padding="12"
+                               HeightRequest="{OnIdiom Phone=100, Default=120}">
+                            <Frame.GestureRecognizers>
+                                <TapGestureRecognizer
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ShortcutsViewModel}}, Path=ExecuteShortcutCommand}"
+                                    CommandParameter="{Binding .}" />
+                            </Frame.GestureRecognizers>
 
-                        <Grid RowDefinitions="*,Auto">
-                            <!-- Icon or Type Indicator -->
-                            <Label Grid.Row="0"
-                                   Text="{Binding Type, Converter={toolkit:BoolToObjectConverter TrueObject='🎬', FalseObject='⌨'}}"
-                                   FontSize="32"
-                                   HorizontalOptions="Center"
-                                   VerticalOptions="Center" />
+                            <Grid RowDefinitions="*,Auto">
+                                <!-- Channel Icon -->
+                                <Grid Grid.Row="0" HorizontalOptions="Center" VerticalOptions="Center">
+                                    <Border StrokeThickness="0"
+                                            HeightRequest="{OnIdiom Phone=48, Default=56}"
+                                            WidthRequest="{OnIdiom Phone=48, Default=56}">
+                                        <Border.StrokeShape>
+                                            <RoundRectangle CornerRadius="12" />
+                                        </Border.StrokeShape>
+                                        <Image Source="{Binding IconSource}"
+                                               Aspect="AspectFit"
+                                               IsVisible="{Binding IconSource, Converter={toolkit:IsNotNullConverter}}" />
+                                    </Border>
+                                    <!-- Fallback icon if no image -->
+                                    <Label Text="⚡"
+                                           FontSize="32"
+                                           HorizontalOptions="Center"
+                                           VerticalOptions="Center"
+                                           IsVisible="{Binding IconSource, Converter={toolkit:IsNullConverter}}" />
+                                </Grid>
 
-                            <!-- Name -->
-                            <Label Grid.Row="1"
-                                   Text="{Binding Name}"
-                                   Style="{StaticResource BodyLabel}"
-                                   HorizontalOptions="Center"
-                                   MaxLines="1"
-                                   LineBreakMode="TailTruncation" />
+                                <!-- Name -->
+                                <Label Grid.Row="1"
+                                       Text="{Binding Name}"
+                                       Style="{StaticResource BodyLabel}"
+                                       FontSize="{OnIdiom Phone=12, Default=13}"
+                                       HorizontalOptions="Center"
+                                       HorizontalTextAlignment="Center"
+                                       MaxLines="1"
+                                       LineBreakMode="TailTruncation" />
 
-                            <!-- Delete Button (visible in edit mode) -->
-                            <Button Grid.Row="0"
-                                    Text="✕"
-                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ShortcutsViewModel}}, Path=DeleteShortcutCommand}"
-                                    CommandParameter="{Binding .}"
-                                    IsVisible="{Binding Source={RelativeSource AncestorType={x:Type vm:ShortcutsViewModel}}, Path=IsEditing}"
-                                    BackgroundColor="{StaticResource Error}"
-                                    TextColor="White"
-                                    CornerRadius="12"
-                                    HeightRequest="24"
-                                    WidthRequest="24"
-                                    Padding="0"
-                                    FontSize="12"
-                                    HorizontalOptions="End"
-                                    VerticalOptions="Start" />
-                        </Grid>
-                    </Frame>
+                                <!-- Delete Button (visible in edit mode) -->
+                                <Border Grid.Row="0"
+                                        BackgroundColor="{StaticResource SystemRed}"
+                                        StrokeThickness="0"
+                                        HeightRequest="24"
+                                        WidthRequest="24"
+                                        HorizontalOptions="End"
+                                        VerticalOptions="Start"
+                                        Margin="-4,-4,0,0"
+                                        IsVisible="{Binding Source={RelativeSource AncestorType={x:Type vm:ShortcutsViewModel}}, Path=IsEditing}">
+                                    <Border.StrokeShape>
+                                        <RoundRectangle CornerRadius="12" />
+                                    </Border.StrokeShape>
+                                    <Border.GestureRecognizers>
+                                        <TapGestureRecognizer
+                                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ShortcutsViewModel}}, Path=DeleteShortcutCommand}"
+                                            CommandParameter="{Binding .}" />
+                                    </Border.GestureRecognizers>
+                                    <Label Text="✕"
+                                           TextColor="White"
+                                           FontSize="12"
+                                           FontAttributes="Bold"
+                                           HorizontalOptions="Center"
+                                           VerticalOptions="Center" />
+                                </Border>
+                            </Grid>
+                        </Frame>
+                    </Grid>
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>
 
-        <!-- Add Button -->
-        <Button Grid.Row="2"
-                Text="+ Add Shortcut"
-                Command="{Binding OpenEditorCommand}"
-                Style="{StaticResource PrimaryButton}"
-                HorizontalOptions="Center"
-                WidthRequest="200"
-                Margin="0,16,0,0" />
-
         <!-- Editor Modal Overlay -->
-        <Grid Grid.RowSpan="3"
-              IsVisible="{Binding IsEditorVisible}"
-              BackgroundColor="{AppThemeBinding Light=#80FFFFFF, Dark=#80000000}">
+        <Grid IsVisible="{Binding IsEditorVisible}"
+              BackgroundColor="{AppThemeBinding Light=#80F2F2F7, Dark=#80000000}"
+              InputTransparent="False">
+            <Grid.GestureRecognizers>
+                <TapGestureRecognizer Command="{Binding CloseEditorCommand}" />
+            </Grid.GestureRecognizers>
 
             <!-- Step 1: Select Channel -->
-            <Frame Style="{StaticResource GlassCard}"
+            <Frame Style="{StaticResource CardFrame}"
                    VerticalOptions="Center"
                    HorizontalOptions="Center"
-                   WidthRequest="400"
+                   WidthRequest="{OnIdiom Phone=340, Default=450}"
                    MaximumHeightRequest="500"
                    Padding="20"
                    IsVisible="{Binding EditorStep, Converter={toolkit:IsEqualConverter}, ConverterParameter=1}">
+                <Frame.GestureRecognizers>
+                    <TapGestureRecognizer />
+                </Frame.GestureRecognizers>
+
                 <Grid RowDefinitions="Auto,*,Auto" RowSpacing="16">
                     <Label Grid.Row="0"
                            Text="Select a Channel"
@@ -130,18 +160,18 @@
 
                     <!-- Channel Grid -->
                     <CollectionView Grid.Row="1"
-                                   ItemsSource="{Binding AvailableChannels}"
-                                   IsVisible="{Binding IsLoadingChannels, Converter={toolkit:InvertedBoolConverter}}">
+                                    ItemsSource="{Binding AvailableChannels}"
+                                    IsVisible="{Binding IsLoadingChannels, Converter={toolkit:InvertedBoolConverter}}">
                         <CollectionView.ItemsLayout>
                             <GridItemsLayout Orientation="Vertical"
-                                            Span="3"
-                                            HorizontalItemSpacing="8"
-                                            VerticalItemSpacing="8" />
+                                             Span="{OnIdiom Phone=3, Default=4}"
+                                             HorizontalItemSpacing="8"
+                                             VerticalItemSpacing="8" />
                         </CollectionView.ItemsLayout>
 
                         <CollectionView.ItemTemplate>
                             <DataTemplate x:DataType="models:RokuChannel">
-                                <Frame BackgroundColor="{AppThemeBinding Light=#20000000, Dark=#20FFFFFF}"
+                                <Frame BackgroundColor="{AppThemeBinding Light={StaticResource SystemFillLight}, Dark={StaticResource SystemFillDark}}"
                                        CornerRadius="12"
                                        Padding="8"
                                        HeightRequest="80"
@@ -154,17 +184,21 @@
                                     </Frame.GestureRecognizers>
 
                                     <VerticalStackLayout Spacing="4" VerticalOptions="Center">
-                                        <Image Source="{Binding IconUrl}"
-                                               HeightRequest="40"
-                                               WidthRequest="40"
-                                               Aspect="AspectFit"
-                                               HorizontalOptions="Center" />
+                                        <Border StrokeThickness="0"
+                                                HeightRequest="40"
+                                                WidthRequest="40"
+                                                HorizontalOptions="Center">
+                                            <Border.StrokeShape>
+                                                <RoundRectangle CornerRadius="8" />
+                                            </Border.StrokeShape>
+                                            <Image Source="{Binding IconUrl}"
+                                                   Aspect="AspectFit" />
+                                        </Border>
                                         <Label Text="{Binding Name}"
-                                               Style="{StaticResource SubtitleLabel}"
+                                               Style="{StaticResource CaptionLabel}"
                                                HorizontalOptions="Center"
                                                MaxLines="1"
-                                               LineBreakMode="TailTruncation"
-                                               FontSize="10" />
+                                               LineBreakMode="TailTruncation" />
                                     </VerticalStackLayout>
                                 </Frame>
                             </DataTemplate>
@@ -175,54 +209,71 @@
                     <Button Grid.Row="2"
                             Text="Cancel"
                             Command="{Binding CloseEditorCommand}"
-                            Style="{StaticResource GlassUtilityButton}"
+                            Style="{StaticResource SecondaryButton}"
                             HorizontalOptions="Center"
-                            WidthRequest="120" />
+                            WidthRequest="120"
+                            HeightRequest="44" />
                 </Grid>
             </Frame>
 
             <!-- Step 2: Name and Save -->
-            <Frame Style="{StaticResource GlassCard}"
+            <Frame Style="{StaticResource CardFrame}"
                    VerticalOptions="Center"
                    HorizontalOptions="Center"
-                   WidthRequest="320"
-                   Padding="20"
+                   WidthRequest="340"
+                   Padding="24"
                    IsVisible="{Binding EditorStep, Converter={toolkit:IsEqualConverter}, ConverterParameter=2}">
-                <VerticalStackLayout Spacing="16">
+                <Frame.GestureRecognizers>
+                    <TapGestureRecognizer />
+                </Frame.GestureRecognizers>
+
+                <VerticalStackLayout Spacing="20">
                     <Label Text="Name Your Shortcut"
                            Style="{StaticResource TitleLabel}"
                            HorizontalOptions="Center" />
 
                     <!-- Selected Channel Preview -->
                     <HorizontalStackLayout Spacing="12" HorizontalOptions="Center">
-                        <Image Source="{Binding SelectedChannel.IconUrl}"
-                               HeightRequest="48"
-                               WidthRequest="48"
-                               Aspect="AspectFit" />
+                        <Border StrokeThickness="0"
+                                HeightRequest="56"
+                                WidthRequest="56">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="12" />
+                            </Border.StrokeShape>
+                            <Image Source="{Binding SelectedChannel.IconUrl}"
+                                   Aspect="AspectFit" />
+                        </Border>
                         <Label Text="{Binding SelectedChannel.Name}"
                                Style="{StaticResource BodyLabel}"
-                               VerticalOptions="Center" />
+                               VerticalOptions="Center"
+                               FontAttributes="Bold" />
                     </HorizontalStackLayout>
 
                     <!-- Name Entry -->
                     <Entry Placeholder="Shortcut name"
-                           Text="{Binding NewShortcutName}" />
+                           Text="{Binding NewShortcutName}"
+                           ReturnCommand="{Binding SaveShortcutCommand}"
+                           ReturnType="Done" />
 
                     <!-- Buttons -->
-                    <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
                         <Button Grid.Column="0"
                                 Text="Back"
                                 Command="{Binding BackToChannelSelectionCommand}"
-                                Style="{StaticResource GlassUtilityButton}" />
+                                Style="{StaticResource SecondaryButton}"
+                                WidthRequest="80"
+                                HeightRequest="44" />
                         <Button Grid.Column="1"
                                 Text="Save"
                                 Command="{Binding SaveShortcutCommand}"
                                 Style="{StaticResource PrimaryButton}"
-                                HeightRequest="40" />
+                                HeightRequest="44" />
                         <Button Grid.Column="2"
                                 Text="Cancel"
                                 Command="{Binding CloseEditorCommand}"
-                                Style="{StaticResource GlassUtilityButton}" />
+                                Style="{StaticResource SecondaryButton}"
+                                WidthRequest="80"
+                                HeightRequest="44" />
                     </Grid>
                 </VerticalStackLayout>
             </Frame>

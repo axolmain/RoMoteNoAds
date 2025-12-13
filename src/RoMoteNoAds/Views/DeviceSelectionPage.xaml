@@ -6,165 +6,204 @@
              xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              x:Class="RoMoteNoAds.Views.DeviceSelectionPage"
              x:DataType="vm:DeviceSelectionViewModel"
-             Title="Devices">
+             Title="Devices"
+             BackgroundColor="{AppThemeBinding Light={StaticResource SystemGroupedBackgroundLight}, Dark={StaticResource SystemGroupedBackgroundDark}}">
 
-    <Grid RowDefinitions="Auto,*,Auto" Padding="16">
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Scan"
+                     Command="{Binding ScanForDevicesCommand}"
+                     IconImageSource="magnifyingglass" />
+    </ContentPage.ToolbarItems>
 
-        <!-- Header with error -->
-        <VerticalStackLayout Grid.Row="0" Spacing="8">
-            <Label Text="Roku Devices"
-                   Style="{StaticResource TitleLabel}" />
-            <Label Text="Select a device to control"
-                   Style="{StaticResource SubtitleLabel}" />
+    <ScrollView>
+        <VerticalStackLayout Spacing="0"
+                             Padding="{OnIdiom Phone='16', Default='24'}">
 
             <!-- Error Message -->
-            <Border BackgroundColor="{StaticResource Error}"
-                   Padding="12,8"
-                   IsVisible="{Binding ErrorMessage, Converter={toolkit:IsStringNotNullOrEmptyConverter}}">
+            <Border BackgroundColor="{StaticResource SystemRed}"
+                    Padding="12,8"
+                    StrokeShape="RoundRectangle 8"
+                    Margin="0,0,0,16"
+                    IsVisible="{Binding ErrorMessage, Converter={toolkit:IsStringNotNullOrEmptyConverter}}">
                 <Label Text="{Binding ErrorMessage}"
                        TextColor="White"
-                       FontSize="12"
+                       FontSize="13"
                        HorizontalOptions="Center" />
             </Border>
-        </VerticalStackLayout>
 
-        <!-- Device List -->
-        <CollectionView Grid.Row="1"
-                       ItemsSource="{Binding Devices}"
-                       Margin="0,16,0,0">
-            <CollectionView.EmptyView>
-                <VerticalStackLayout VerticalOptions="Center"
-                                    HorizontalOptions="Center"
-                                    Spacing="16">
-                    <Label Text="No Devices Found"
-                           Style="{StaticResource TitleLabel}"
+            <!-- Scanning Progress -->
+            <Frame Style="{StaticResource CardFrame}"
+                   Margin="0,0,0,16"
+                   IsVisible="{Binding IsScanning}">
+                <HorizontalStackLayout Spacing="12" HorizontalOptions="Center">
+                    <ActivityIndicator IsRunning="{Binding IsScanning}"
+                                       HeightRequest="20"
+                                       WidthRequest="20" />
+                    <Label Text="Scanning for Roku devices..."
+                           Style="{StaticResource BodyLabel}" />
+                </HorizontalStackLayout>
+            </Frame>
+
+            <!-- Section: My Devices -->
+            <Label Text="MY DEVICES"
+                   Style="{StaticResource GroupedListHeader}" />
+
+            <!-- Devices List (grouped card style) -->
+            <Frame Style="{StaticResource GroupedCard}"
+                   IsVisible="{Binding HasDevices}">
+                <VerticalStackLayout BindableLayout.ItemsSource="{Binding Devices}"
+                                     Spacing="0">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="models:RokuDevice">
+                            <SwipeView>
+                                <SwipeView.RightItems>
+                                    <SwipeItems>
+                                        <SwipeItem Text="Delete"
+                                                   BackgroundColor="{StaticResource SystemRed}"
+                                                   Command="{Binding Source={RelativeSource AncestorType={x:Type vm:DeviceSelectionViewModel}}, Path=RemoveDeviceCommand}"
+                                                   CommandParameter="{Binding .}" />
+                                    </SwipeItems>
+                                </SwipeView.RightItems>
+
+                                <Grid Padding="16,12"
+                                      ColumnDefinitions="Auto,*,Auto"
+                                      ColumnSpacing="12"
+                                      BackgroundColor="{AppThemeBinding Light={StaticResource SecondarySystemGroupedBackgroundLight}, Dark={StaticResource SecondarySystemGroupedBackgroundDark}}">
+                                    <Grid.GestureRecognizers>
+                                        <TapGestureRecognizer
+                                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:DeviceSelectionViewModel}}, Path=SelectDeviceCommand}"
+                                            CommandParameter="{Binding .}" />
+                                    </Grid.GestureRecognizers>
+
+                                    <!-- Device Icon -->
+                                    <Border Grid.Column="0"
+                                            BackgroundColor="{AppThemeBinding Light={StaticResource SystemFillLight}, Dark={StaticResource SystemFillDark}}"
+                                            StrokeThickness="0"
+                                            HeightRequest="44"
+                                            WidthRequest="44"
+                                            VerticalOptions="Center">
+                                        <Border.StrokeShape>
+                                            <RoundRectangle CornerRadius="10" />
+                                        </Border.StrokeShape>
+                                        <Label Text="📺"
+                                               FontSize="22"
+                                               HorizontalOptions="Center"
+                                               VerticalOptions="Center" />
+                                    </Border>
+
+                                    <!-- Device Info -->
+                                    <VerticalStackLayout Grid.Column="1"
+                                                         VerticalOptions="Center"
+                                                         Spacing="2">
+                                        <Label Text="{Binding DisplayName}"
+                                               Style="{StaticResource BodyLabel}"
+                                               FontAttributes="Bold" />
+                                        <Label Style="{StaticResource SubtitleLabel}">
+                                            <Label.FormattedText>
+                                                <FormattedString>
+                                                    <Span Text="{Binding ModelName}" />
+                                                    <Span Text=" • " />
+                                                    <Span Text="{Binding IpAddress}" />
+                                                </FormattedString>
+                                            </Label.FormattedText>
+                                        </Label>
+                                    </VerticalStackLayout>
+
+                                    <!-- Selection Indicator -->
+                                    <Label Grid.Column="2"
+                                           Text="✓"
+                                           TextColor="{StaticResource AccentColor}"
+                                           FontSize="20"
+                                           FontAttributes="Bold"
+                                           VerticalOptions="Center"
+                                           IsVisible="{Binding IsSelected}" />
+                                </Grid>
+                            </SwipeView>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Empty State -->
+            <Frame Style="{StaticResource CardFrame}"
+                   IsVisible="{Binding HasDevices, Converter={toolkit:InvertedBoolConverter}}"
+                   Padding="24">
+                <VerticalStackLayout Spacing="12" HorizontalOptions="Center">
+                    <Label Text="📡"
+                           FontSize="48"
                            HorizontalOptions="Center" />
-                    <Label Text="Tap 'Scan' to find Roku devices on your network"
+                    <Label Text="No Devices Found"
+                           Style="{StaticResource HeadlineLabel}"
+                           HorizontalOptions="Center" />
+                    <Label Text="Tap 'Scan' to find Roku devices on your network, or add one manually below."
                            Style="{StaticResource SubtitleLabel}"
                            HorizontalOptions="Center"
                            HorizontalTextAlignment="Center" />
                 </VerticalStackLayout>
-            </CollectionView.EmptyView>
-
-            <CollectionView.ItemTemplate>
-                <DataTemplate x:DataType="models:RokuDevice">
-                    <SwipeView>
-                        <SwipeView.RightItems>
-                            <SwipeItems>
-                                <SwipeItem Text="Delete"
-                                          BackgroundColor="{StaticResource Error}"
-                                          Command="{Binding Source={RelativeSource AncestorType={x:Type vm:DeviceSelectionViewModel}}, Path=RemoveDeviceCommand}"
-                                          CommandParameter="{Binding .}" />
-                            </SwipeItems>
-                        </SwipeView.RightItems>
-
-                        <Frame Style="{StaticResource CardFrame}"
-                               Margin="0,6"
-                               BorderColor="{Binding IsSelected, Converter={StaticResource BoolToColorConverter}}">
-                            <Frame.GestureRecognizers>
-                                <TapGestureRecognizer
-                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:DeviceSelectionViewModel}}, Path=SelectDeviceCommand}"
-                                    CommandParameter="{Binding .}" />
-                            </Frame.GestureRecognizers>
-
-                            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto">
-                                <!-- Device Name -->
-                                <Label Grid.Row="0" Grid.Column="0"
-                                       Text="{Binding DisplayName}"
-                                       Style="{StaticResource BodyLabel}"
-                                       FontAttributes="Bold"
-                                       FontSize="16" />
-
-                                <!-- Selected Indicator -->
-                                <Label Grid.Row="0" Grid.Column="1"
-                                       Text="✓ Connected"
-                                       TextColor="{StaticResource Success}"
-                                       FontSize="12"
-                                       IsVisible="{Binding IsSelected}"
-                                       VerticalOptions="Center" />
-
-                                <!-- Model Info -->
-                                <Label Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
-                                       Text="{Binding ModelName}"
-                                       Style="{StaticResource SubtitleLabel}" />
-
-                                <!-- IP Address and Device Type -->
-                                <HorizontalStackLayout Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
-                                                      Spacing="8">
-                                    <Label Text="{Binding IpAddress}"
-                                           Style="{StaticResource SubtitleLabel}"
-                                           FontSize="12" />
-                                    <Label Text="•"
-                                           Style="{StaticResource SubtitleLabel}"
-                                           FontSize="12" />
-                                    <Label Text="{Binding IsTv, StringFormat='{0:Roku TV;Roku TV;Streaming Device}'}"
-                                           Style="{StaticResource SubtitleLabel}"
-                                           FontSize="12" />
-                                </HorizontalStackLayout>
-                            </Grid>
-                        </Frame>
-                    </SwipeView>
-                </DataTemplate>
-            </CollectionView.ItemTemplate>
-        </CollectionView>
-
-        <!-- Bottom Actions -->
-        <VerticalStackLayout Grid.Row="2" Spacing="12">
-            <!-- Manual IP Entry -->
-            <Frame Style="{StaticResource CardFrame}" Padding="12">
-                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
-                    <Entry Grid.Column="0"
-                           Placeholder="Enter IP address (e.g., 192.168.1.100)"
-                           Text="{Binding ManualIpAddress}"
-                           Keyboard="Numeric"
-                           ReturnCommand="{Binding AddManualDeviceCommand}" />
-                    <Button Grid.Column="1"
-                            Text="Add"
-                            Command="{Binding AddManualDeviceCommand}"
-                            Style="{StaticResource PrimaryButton}"
-                            WidthRequest="80"
-                            IsEnabled="{Binding IsBusy, Converter={toolkit:InvertedBoolConverter}}" />
-                </Grid>
             </Frame>
 
-            <!-- Scan Button -->
-            <Button Text="{Binding IsScanning, Converter={toolkit:BoolToObjectConverter TrueObject='Scanning...', FalseObject='Scan for Devices'}}"
-                    Command="{Binding ScanForDevicesCommand}"
-                    Style="{StaticResource PrimaryButton}"
-                    IsEnabled="{Binding IsScanning, Converter={toolkit:InvertedBoolConverter}}" />
+            <!-- Section: Add Device -->
+            <Label Text="ADD DEVICE"
+                   Style="{StaticResource GroupedListHeader}" />
+
+            <Frame Style="{StaticResource GroupedCard}" Padding="16">
+                <VerticalStackLayout Spacing="16">
+                    <!-- Manual IP Entry -->
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="IP Address"
+                               Style="{StaticResource CaptionLabel}" />
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                            <Entry Grid.Column="0"
+                                   Placeholder="192.168.1.100"
+                                   Text="{Binding ManualIpAddress}"
+                                   Keyboard="Numeric"
+                                   ReturnCommand="{Binding AddManualDeviceCommand}"
+                                   ClearButtonVisibility="WhileEditing" />
+                            <Button Grid.Column="1"
+                                    Text="Add"
+                                    Command="{Binding AddManualDeviceCommand}"
+                                    Style="{StaticResource PrimaryButton}"
+                                    WidthRequest="80"
+                                    HeightRequest="44"
+                                    IsEnabled="{Binding IsBusy, Converter={toolkit:InvertedBoolConverter}}" />
+                        </Grid>
+                    </VerticalStackLayout>
+
+                    <!-- Separator -->
+                    <BoxView HeightRequest="1"
+                             Color="{AppThemeBinding Light={StaticResource SeparatorLight}, Dark={StaticResource SeparatorDark}}" />
+
+                    <!-- Scan Button -->
+                    <Button Text="{Binding IsScanning, Converter={toolkit:BoolToObjectConverter TrueObject='Scanning...', FalseObject='Scan Network'}}"
+                            Command="{Binding ScanForDevicesCommand}"
+                            Style="{StaticResource SecondaryButton}"
+                            IsEnabled="{Binding IsScanning, Converter={toolkit:InvertedBoolConverter}}" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Footer Note -->
+            <Label Text="Swipe left on a device to remove it from your list."
+                   Style="{StaticResource FootnoteLabel}"
+                   HorizontalOptions="Center"
+                   Margin="0,16,0,0" />
+
+            <!-- Loading Overlay -->
+            <Grid IsVisible="{Binding IsBusy}"
+                  BackgroundColor="{AppThemeBinding Light=#80F2F2F7, Dark=#80000000}"
+                  HeightRequest="100"
+                  Margin="0,16,0,0">
+                <VerticalStackLayout VerticalOptions="Center"
+                                     HorizontalOptions="Center"
+                                     Spacing="12">
+                    <ActivityIndicator IsRunning="{Binding IsBusy}"
+                                       HeightRequest="30"
+                                       WidthRequest="30" />
+                    <Label Text="Connecting..."
+                           Style="{StaticResource SubtitleLabel}"
+                           HorizontalOptions="Center" />
+                </VerticalStackLayout>
+            </Grid>
+
         </VerticalStackLayout>
-
-        <!-- Loading Overlay -->
-        <Grid Grid.RowSpan="3"
-              IsVisible="{Binding IsBusy}"
-              BackgroundColor="{AppThemeBinding Light=#80FFFFFF, Dark=#80000000}">
-            <VerticalStackLayout VerticalOptions="Center"
-                                HorizontalOptions="Center"
-                                Spacing="16">
-                <ActivityIndicator IsRunning="{Binding IsBusy}"
-                                  HeightRequest="50"
-                                  WidthRequest="50" />
-                <Label Text="Connecting..."
-                       Style="{StaticResource BodyLabel}"
-                       HorizontalOptions="Center" />
-            </VerticalStackLayout>
-        </Grid>
-
-        <!-- Scanning Indicator -->
-        <Grid Grid.RowSpan="3"
-              IsVisible="{Binding IsScanning}"
-              BackgroundColor="{AppThemeBinding Light=#80FFFFFF, Dark=#80000000}"
-              InputTransparent="True">
-            <VerticalStackLayout VerticalOptions="Center"
-                                HorizontalOptions="Center"
-                                Spacing="16">
-                <ActivityIndicator IsRunning="{Binding IsScanning}"
-                                  HeightRequest="50"
-                                  WidthRequest="50" />
-                <Label Text="Scanning for Roku devices..."
-                       Style="{StaticResource BodyLabel}"
-                       HorizontalOptions="Center" />
-            </VerticalStackLayout>
-        </Grid>
-    </Grid>
+    </ScrollView>
 </ContentPage>

@@ -4,46 +4,98 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
 
-    <!-- Roku Purple Theme -->
+    <!-- Accent Color (Roku Purple - used sparingly) -->
+    <Color x:Key="AccentColor">#662D91</Color>
+    <Color x:Key="AccentColorDark">#4A1F6B</Color>
+    <Color x:Key="AccentColorLight">#8B5CB3</Color>
+
+    <!-- Legacy aliases for compatibility -->
     <Color x:Key="Primary">#662D91</Color>
     <Color x:Key="PrimaryDark">#4A1F6B</Color>
     <Color x:Key="PrimaryLight">#8B5CB3</Color>
-    <Color x:Key="Secondary">#8E44AD</Color>
-    <Color x:Key="Tertiary">#9B59B6</Color>
 
-    <!-- Semantic Colors -->
+    <!-- Apple System Colors (iOS/macOS semantic colors) -->
+    <Color x:Key="SystemBlue">#007AFF</Color>
+    <Color x:Key="SystemGreen">#34C759</Color>
+    <Color x:Key="SystemRed">#FF3B30</Color>
+    <Color x:Key="SystemOrange">#FF9500</Color>
+    <Color x:Key="SystemYellow">#FFCC00</Color>
+    <Color x:Key="SystemTeal">#5AC8FA</Color>
+    <Color x:Key="SystemPink">#FF2D55</Color>
+    <Color x:Key="SystemIndigo">#5856D6</Color>
+
+    <!-- Apple System Grays (Light Mode) -->
+    <Color x:Key="SystemGray">#8E8E93</Color>
+    <Color x:Key="SystemGray2Light">#AEAEB2</Color>
+    <Color x:Key="SystemGray3Light">#C7C7CC</Color>
+    <Color x:Key="SystemGray4Light">#D1D1D6</Color>
+    <Color x:Key="SystemGray5Light">#E5E5EA</Color>
+    <Color x:Key="SystemGray6Light">#F2F2F7</Color>
+
+    <!-- Apple System Grays (Dark Mode) -->
+    <Color x:Key="SystemGray2Dark">#636366</Color>
+    <Color x:Key="SystemGray3Dark">#48484A</Color>
+    <Color x:Key="SystemGray4Dark">#3A3A3C</Color>
+    <Color x:Key="SystemGray5Dark">#2C2C2E</Color>
+    <Color x:Key="SystemGray6Dark">#1C1C1E</Color>
+
+    <!-- Apple Background Colors -->
+    <Color x:Key="SystemBackgroundLight">#FFFFFF</Color>
+    <Color x:Key="SecondarySystemBackgroundLight">#F2F2F7</Color>
+    <Color x:Key="TertiarySystemBackgroundLight">#FFFFFF</Color>
+    <Color x:Key="SystemBackgroundDark">#000000</Color>
+    <Color x:Key="SecondarySystemBackgroundDark">#1C1C1E</Color>
+    <Color x:Key="TertiarySystemBackgroundDark">#2C2C2E</Color>
+
+    <!-- Apple Grouped Background Colors -->
+    <Color x:Key="SystemGroupedBackgroundLight">#F2F2F7</Color>
+    <Color x:Key="SecondarySystemGroupedBackgroundLight">#FFFFFF</Color>
+    <Color x:Key="SystemGroupedBackgroundDark">#000000</Color>
+    <Color x:Key="SecondarySystemGroupedBackgroundDark">#1C1C1E</Color>
+
+    <!-- Apple Label Colors -->
+    <Color x:Key="LabelLight">#000000</Color>
+    <Color x:Key="SecondaryLabelLight">#3C3C4399</Color>
+    <Color x:Key="TertiaryLabelLight">#3C3C434D</Color>
+    <Color x:Key="QuaternaryLabelLight">#3C3C432E</Color>
+    <Color x:Key="LabelDark">#FFFFFF</Color>
+    <Color x:Key="SecondaryLabelDark">#EBEBF599</Color>
+    <Color x:Key="TertiaryLabelDark">#EBEBF54D</Color>
+    <Color x:Key="QuaternaryLabelDark">#EBEBF52E</Color>
+
+    <!-- Apple Separator Colors -->
+    <Color x:Key="SeparatorLight">#3C3C4349</Color>
+    <Color x:Key="SeparatorDark">#54545899</Color>
+    <Color x:Key="OpaqueSeparatorLight">#C6C6C8</Color>
+    <Color x:Key="OpaqueSeparatorDark">#38383A</Color>
+
+    <!-- Apple Fill Colors -->
+    <Color x:Key="SystemFillLight">#78788033</Color>
+    <Color x:Key="SecondarySystemFillLight">#78788028</Color>
+    <Color x:Key="TertiarySystemFillLight">#7676801E</Color>
+    <Color x:Key="QuaternarySystemFillLight">#74748014</Color>
+    <Color x:Key="SystemFillDark">#7878805C</Color>
+    <Color x:Key="SecondarySystemFillDark">#78788052</Color>
+    <Color x:Key="TertiarySystemFillDark">#7676803D</Color>
+    <Color x:Key="QuaternarySystemFillDark">#7474802E</Color>
+
+    <!-- Status Colors (Apple-aligned) -->
+    <Color x:Key="Success">#34C759</Color>
+    <Color x:Key="Warning">#FF9500</Color>
+    <Color x:Key="Error">#FF3B30</Color>
+
+    <!-- Basic Colors -->
     <Color x:Key="White">White</Color>
     <Color x:Key="Black">Black</Color>
-    <Color x:Key="Gray100">#E1E1E1</Color>
-    <Color x:Key="Gray200">#C8C8C8</Color>
-    <Color x:Key="Gray300">#ACACAC</Color>
-    <Color x:Key="Gray400">#919191</Color>
-    <Color x:Key="Gray500">#6E6E6E</Color>
-    <Color x:Key="Gray600">#404040</Color>
-    <Color x:Key="Gray900">#212121</Color>
-    <Color x:Key="Gray950">#141414</Color>
 
-    <!-- Status Colors -->
-    <Color x:Key="Success">#2ECC71</Color>
-    <Color x:Key="Warning">#F39C12</Color>
-    <Color x:Key="Error">#E74C3C</Color>
-
-    <!-- Light Theme -->
+    <!-- Legacy Theme Colors (for backward compatibility during migration) -->
     <Color x:Key="PageBackgroundLight">#FFFFFF</Color>
-    <Color x:Key="CardBackgroundLight">#F5F5F5</Color>
-    <Color x:Key="TextPrimaryLight">#212121</Color>
-    <Color x:Key="TextSecondaryLight">#757575</Color>
-
-    <!-- Dark Theme -->
-    <Color x:Key="PageBackgroundDark">#1A1A1A</Color>
-    <Color x:Key="CardBackgroundDark">#2D2D2D</Color>
+    <Color x:Key="CardBackgroundLight">#F2F2F7</Color>
+    <Color x:Key="TextPrimaryLight">#000000</Color>
+    <Color x:Key="TextSecondaryLight">#3C3C4399</Color>
+    <Color x:Key="PageBackgroundDark">#000000</Color>
+    <Color x:Key="CardBackgroundDark">#1C1C1E</Color>
     <Color x:Key="TextPrimaryDark">#FFFFFF</Color>
-    <Color x:Key="TextSecondaryDark">#B0B0B0</Color>
-
-    <!-- Glass/Frost Effects -->
-    <Color x:Key="FrostLight">#E8FFFFFF</Color>
-    <Color x:Key="FrostDark">#E82D2D2D</Color>
-    <Color x:Key="FrostBorderLight">#40000000</Color>
-    <Color x:Key="FrostBorderDark">#40FFFFFF</Color>
+    <Color x:Key="TextSecondaryDark">#EBEBF599</Color>
 
 </ResourceDictionary>

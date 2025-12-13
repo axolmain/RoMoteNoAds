@@ -27,6 +27,13 @@ public static class MauiProgram
         builder.Services.AddSingleton<IStorageService, StorageService>();
         builder.Services.AddSingleton<IShortcutService, ShortcutService>();
 
+        // Register platform-specific volume button service
+#if IOS
+        builder.Services.AddSingleton<IVolumeButtonService, RoMoteNoAds.Platforms.iOS.VolumeButtonService>();
+#else
+        builder.Services.AddSingleton<IVolumeButtonService, NullVolumeButtonService>();
+#endif
+
         // Register ViewModels
         builder.Services.AddSingleton<DeviceSelectionViewModel>();
         builder.Services.AddSingleton<RemoteViewModel>();
