@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:RoMoteNoAds.ViewModels"
+             xmlns:controls="clr-namespace:RoMoteNoAds.Controls"
+             xmlns:models="clr-namespace:RoMoteNoAds.Models"
+             x:Class="RoMoteNoAds.Views.NeumorphicChannelsPage"
+             x:DataType="vm:ChannelsViewModel"
+             Title="Channels"
+             BackgroundColor="{AppThemeBinding Light={StaticResource NeuBackgroundLight}, Dark={StaticResource NeuBackgroundDark}}">
+
+    <Grid RowDefinitions="Auto,*" Padding="16">
+        <!-- Header -->
+        <Label Grid.Row="0"
+               Text="Channels"
+               FontSize="28"
+               FontAttributes="Bold"
+               Margin="0,0,0,16"
+               TextColor="{AppThemeBinding Light={StaticResource NeuTextPrimaryLight}, Dark={StaticResource NeuTextPrimaryDark}}" />
+
+        <!-- Channels Grid -->
+        <CollectionView Grid.Row="1"
+                        ItemsSource="{Binding Channels}"
+                        SelectionMode="Single"
+                        SelectionChangedCommand="{Binding LaunchChannelCommand}"
+                        SelectionChangedCommandParameter="{Binding SelectedItem, Source={RelativeSource Self}}">
+            <CollectionView.ItemsLayout>
+                <GridItemsLayout Orientation="Vertical"
+                                 Span="{OnIdiom Phone=3, Tablet=5, Desktop=6}"
+                                 HorizontalItemSpacing="16"
+                                 VerticalItemSpacing="16" />
+            </CollectionView.ItemsLayout>
+
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="models:RokuChannel">
+                    <Grid HeightRequest="100" WidthRequest="100">
+                        <!-- Neomorphic card background drawn manually -->
+                        <BoxView BackgroundColor="{AppThemeBinding Light={StaticResource NeuBackgroundLight}, Dark={StaticResource NeuBackgroundDark}}"
+                                 CornerRadius="16" />
+
+                        <VerticalStackLayout VerticalOptions="Center"
+                                              HorizontalOptions="Center"
+                                              Spacing="8">
+                            <Image Source="{Binding IconSource}"
+                                   WidthRequest="48"
+                                   HeightRequest="48"
+                                   Aspect="AspectFit" />
+                            <Label Text="{Binding Name}"
+                                   FontSize="10"
+                                   MaxLines="1"
+                                   LineBreakMode="TailTruncation"
+                                   HorizontalOptions="Center"
+                                   TextColor="{AppThemeBinding Light={StaticResource NeuTextSecondaryLight}, Dark={StaticResource NeuTextSecondaryDark}}" />
+                        </VerticalStackLayout>
+                    </Grid>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </Grid>
+</ContentPage>

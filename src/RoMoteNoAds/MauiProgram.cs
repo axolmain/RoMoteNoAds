@@ -4,6 +4,7 @@ using RoMote.Roku;
 using RoMoteNoAds.Services;
 using RoMoteNoAds.ViewModels;
 using RoMoteNoAds.Views;
+using SkiaSharp.Views.Maui.Controls.Hosting;
 
 namespace RoMoteNoAds;
 
@@ -15,6 +16,7 @@ public static class MauiProgram
         builder
             .UseMauiApp<App>()
             .UseMauiCommunityToolkit()
+            .UseSkiaSharp()
             .ConfigureFonts(fonts =>
             {
                 fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
@@ -43,8 +45,12 @@ public static class MauiProgram
         // Register Views
         builder.Services.AddSingleton<DeviceSelectionPage>();
         builder.Services.AddSingleton<RemotePage>();
+        builder.Services.AddSingleton<NeumorphicRemotePage>();
         builder.Services.AddSingleton<ChannelsPage>();
+        builder.Services.AddSingleton<NeumorphicChannelsPage>();
         builder.Services.AddSingleton<ShortcutsPage>();
+        builder.Services.AddSingleton<NeumorphicShortcutsPage>();
+        builder.Services.AddSingleton<MainPage>();
 
 #if DEBUG
         builder.Logging.AddDebug();

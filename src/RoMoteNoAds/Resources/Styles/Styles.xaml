@@ -9,7 +9,7 @@
          ═══════════════════════════════════════════════════════════════════ -->
 
     <Style TargetType="Page" ApplyToDerivedTypes="True">
-        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource SystemBackgroundLight}, Dark={StaticResource SystemBackgroundDark}}" />
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource NeuBackgroundLight}, Dark={StaticResource NeuBackgroundDark}}" />
     </Style>
 
     <!-- ═══════════════════════════════════════════════════════════════════

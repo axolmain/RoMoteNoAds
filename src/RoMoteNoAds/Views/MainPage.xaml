@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:controls="clr-namespace:RoMoteNoAds.Controls"
+             xmlns:views="clr-namespace:RoMoteNoAds.Views"
+             x:Class="RoMoteNoAds.Views.MainPage"
+             x:Name="ThisPage"
+             BackgroundColor="#E0E5EC">
+
+    <Grid x:Name="RootGrid">
+        <!-- Layout is set dynamically based on idiom -->
+
+        <!-- Debug label -->
+        <Label x:Name="DebugLabel" Text="MainPage Loaded" TextColor="Red" FontSize="24"
+               HorizontalOptions="Center" VerticalOptions="Start" Margin="0,50,0,0" ZIndex="100" />
+
+        <!-- Sidebar (Tablet only) -->
+        <controls:NeumorphicSidebar x:Name="Sidebar"
+                                     Grid.Column="0"
+                                     SelectedItem="{Binding CurrentTab, Mode=TwoWay}"
+                                     ItemSelected="OnSidebarItemSelected"
+                                     IsVisible="False" />
+
+        <!-- Content Area -->
+        <Grid x:Name="ContentArea" Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <!-- Page Content -->
+            <ContentView x:Name="PageContent" Grid.Row="0" />
+
+            <!-- TabBar (Phone only) -->
+            <controls:NeumorphicTabBar x:Name="TabBar"
+                                        Grid.Row="1"
+                                        SelectedTab="{Binding CurrentTab, Mode=TwoWay}"
+                                        TabSelected="OnTabSelected"
+                                        IsVisible="False" />
+        </Grid>
+    </Grid>
+</ContentPage>

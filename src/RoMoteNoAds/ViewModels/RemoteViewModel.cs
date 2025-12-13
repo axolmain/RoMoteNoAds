@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using RoMote.Roku;
 using RoMoteNoAds.Models;
 using RoMoteNoAds.Services;
+using System.Collections.ObjectModel;
 
 namespace RoMoteNoAds.ViewModels;
 
@@ -32,6 +33,12 @@ public partial class RemoteViewModel : BaseViewModel
 
     [ObservableProperty]
     private bool _supportsPower;
+
+    [ObservableProperty]
+    private ObservableCollection<RokuDevice> _savedDevices = new();
+
+    [ObservableProperty]
+    private bool _isConnected;
 
     public RemoteViewModel(
         IRokuService rokuService,
@@ -90,8 +97,13 @@ public partial class RemoteViewModel : BaseViewModel
         {
             CurrentDevice = lastDevice;
             _rokuService.CurrentDevice = lastDevice.ToLibrary();
+            IsConnected = true;
             UpdateCapabilities();
             await RefreshActiveChannelAsync();
+        }
+        else
+        {
+            IsConnected = false;
         }
     }
 
@@ -297,6 +309,45 @@ public partial class RemoteViewModel : BaseViewModel
         catch
         {
             // Haptics not available on all platforms
+        }
+    }
+
+    // Device Management Commands
+    [RelayCommand]
+    private async Task SelectDevice(RokuDevice device)
+    {
+        if (device != null)
+        {
+            CurrentDevice = device;
+            _rokuService.CurrentDevice = device.ToLibrary();
+            await _storageService.SetLastUsedDeviceAsync(device);
+            IsConnected = CurrentDevice != null;
+            UpdateCapabilities();
+            await RefreshActiveChannelAsync();
+        }
+    }
+
+    [RelayCommand]
+    private async Task ScanDevices()
+    {
+        try
+        {
+            IsBusy = true;
+            var libDevices = await _rokuService.DiscoverDevicesAsync();
+            SavedDevices.Clear();
+            foreach (var libDevice in libDevices)
+            {
+                var device = RokuDevice.FromLibrary(libDevice);
+                SavedDevices.Add(device);
+            }
+        }
+        catch (Exception ex)
+        {
+            SetError($"Failed to scan for devices: {ex.Message}");
+        }
+        finally
+        {
+            IsBusy = false;
         }
     }
 

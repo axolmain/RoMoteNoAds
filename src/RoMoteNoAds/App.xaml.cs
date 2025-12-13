@@ -2,13 +2,11 @@ namespace RoMoteNoAds;
 
 public partial class App : Application
 {
-    public App()
+    public App(IServiceProvider serviceProvider)
     {
         InitializeComponent();
-    }
 
-    protected override Window CreateWindow(IActivationState? activationState)
-    {
-        return new Window(new AppShell());
+        // Use MainPage instead of AppShell for neomorphic navigation
+        MainPage = serviceProvider.GetRequiredService<Views.MainPage>();
     }
 }

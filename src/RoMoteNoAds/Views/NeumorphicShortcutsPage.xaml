@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:RoMoteNoAds.ViewModels"
+             xmlns:controls="clr-namespace:RoMoteNoAds.Controls"
+             x:Class="RoMoteNoAds.Views.NeumorphicShortcutsPage"
+             x:DataType="vm:ShortcutsViewModel"
+             Title="Shortcuts"
+             BackgroundColor="{AppThemeBinding Light={StaticResource NeuBackgroundLight}, Dark={StaticResource NeuBackgroundDark}}">
+
+    <Grid RowDefinitions="Auto,*" Padding="16">
+        <!-- Header -->
+        <Label Grid.Row="0"
+               Text="Shortcuts"
+               FontSize="28"
+               FontAttributes="Bold"
+               Margin="0,0,0,16"
+               TextColor="{AppThemeBinding Light={StaticResource NeuTextPrimaryLight}, Dark={StaticResource NeuTextPrimaryDark}}" />
+
+        <!-- Shortcuts List -->
+        <CollectionView Grid.Row="1"
+                        ItemsSource="{Binding Shortcuts}"
+                        SelectionMode="Single">
+            <CollectionView.ItemsLayout>
+                <LinearItemsLayout Orientation="Vertical" ItemSpacing="12" />
+            </CollectionView.ItemsLayout>
+
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Grid HeightRequest="60" Padding="4">
+                        <BoxView BackgroundColor="{AppThemeBinding Light={StaticResource NeuBackgroundLight}, Dark={StaticResource NeuBackgroundDark}}"
+                                 CornerRadius="12" />
+                        <HorizontalStackLayout Spacing="16" Padding="16,0">
+                            <Label Text="⚡"
+                                   FontSize="24"
+                                   VerticalOptions="Center" />
+                            <Label Text="{Binding Name}"
+                                   FontSize="16"
+                                   VerticalOptions="Center"
+                                   TextColor="{AppThemeBinding Light={StaticResource NeuTextPrimaryLight}, Dark={StaticResource NeuTextPrimaryDark}}" />
+                        </HorizontalStackLayout>
+                    </Grid>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+
+            <CollectionView.EmptyView>
+                <VerticalStackLayout VerticalOptions="Center"
+                                      HorizontalOptions="Center"
+                                      Spacing="16">
+                    <Label Text="⚡"
+                           FontSize="64"
+                           HorizontalOptions="Center"
+                           TextColor="{AppThemeBinding Light={StaticResource NeuTextSecondaryLight}, Dark={StaticResource NeuTextSecondaryDark}}" />
+                    <Label Text="No shortcuts yet"
+                           FontSize="18"
+                           HorizontalOptions="Center"
+                           TextColor="{AppThemeBinding Light={StaticResource NeuTextSecondaryLight}, Dark={StaticResource NeuTextSecondaryDark}}" />
+                    <Label Text="Create shortcuts to quickly access your favorite actions"
+                           FontSize="14"
+                           HorizontalOptions="Center"
+                           HorizontalTextAlignment="Center"
+                           TextColor="{AppThemeBinding Light={StaticResource NeuTextSecondaryLight}, Dark={StaticResource NeuTextSecondaryDark}}" />
+                </VerticalStackLayout>
+            </CollectionView.EmptyView>
+        </CollectionView>
+    </Grid>
+</ContentPage>

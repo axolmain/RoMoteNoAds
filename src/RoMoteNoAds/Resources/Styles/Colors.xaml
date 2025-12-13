@@ -98,4 +98,30 @@
     <Color x:Key="TextPrimaryDark">#FFFFFF</Color>
     <Color x:Key="TextSecondaryDark">#EBEBF599</Color>
 
+    <!-- ═══════════════════════════════════════════════════════════════════
+         NEOMORPHIC DESIGN COLORS
+         ═══════════════════════════════════════════════════════════════════ -->
+
+    <!-- Light Mode Neomorphic -->
+    <Color x:Key="NeuBackgroundLight">#E0E5EC</Color>
+    <Color x:Key="NeuShadowDarkLight">#A3B1C6</Color>
+    <Color x:Key="NeuShadowLightLight">#FFFFFF</Color>
+    <Color x:Key="NeuTextPrimaryLight">#6B7280</Color>
+    <Color x:Key="NeuTextSecondaryLight">#9CA3AF</Color>
+    <Color x:Key="NeuAccentLight">#3B82F6</Color>
+
+    <!-- Dark Mode Neomorphic -->
+    <Color x:Key="NeuBackgroundDark">#2D3748</Color>
+    <Color x:Key="NeuShadowDarkDark">#1A202C</Color>
+    <Color x:Key="NeuShadowLightDark">#4A5568</Color>
+    <Color x:Key="NeuTextPrimaryDark">#E2E8F0</Color>
+    <Color x:Key="NeuTextSecondaryDark">#A0AEC0</Color>
+    <Color x:Key="NeuAccentDark">#63B3ED</Color>
+
+    <!-- Neomorphic Status Colors -->
+    <Color x:Key="NeuConnectedLight">#10B981</Color>
+    <Color x:Key="NeuConnectedDark">#34D399</Color>
+    <Color x:Key="NeuPowerLight">#EF4444</Color>
+    <Color x:Key="NeuPowerDark">#F87171</Color>
+
 </ResourceDictionary>

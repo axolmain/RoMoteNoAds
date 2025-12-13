@@ -4,6 +4,7 @@
 <dict>
 	<!-- Multicast networking entitlement for SSDP device discovery -->
 	<!-- Note: Requires Apple approval via provisioning profile for App Store -->
+	<!-- Disabled for dev builds: -->
 	<key>com.apple.developer.networking.multicast</key>
 	<true/>
 </dict>
